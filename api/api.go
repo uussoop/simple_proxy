@@ -98,7 +98,14 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 
 				w.Header().Add(k, v[0])
 			}
-			w.Write(buf[:n])
+			_, writeErr := w.Write(buf[:n])
+			if writeErr != nil {
+				fmt.Printf("error writing response body: %s\n", writeErr)
+				break
+			}
+			if f, ok := w.(http.Flusher); ok {
+				f.Flush()
+			}
 		}
 	} else {
 		resp_body, err := io.ReadAll(resp.Body)
