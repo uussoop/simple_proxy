@@ -74,9 +74,7 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// resp_body := utils.Deflate_gzip(resp)
-	w.Header().Set("Access-Control-Allow-Origin", "*")                   // Allow requests from any origin
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS") // Allow specific HTTP methods
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")       // Allow specific request headers
+
 	// Check if the value of the "stream" field is true
 	if streamBody.Stream {
 
@@ -99,6 +97,9 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 				fmt.Printf("%s: %s\n", k, v[0])
 
 			}
+			w.Header().Set("Access-Control-Allow-Origin", "*")                   // Allow requests from any origin
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS") // Allow specific HTTP methods
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")       // Allow specific request headers
 			w.Write(buf[:n])
 		}
 	} else {
@@ -114,6 +115,9 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("%s: %s\n", k, v[0])
 
 		}
+		w.Header().Set("Access-Control-Allow-Origin", "*")                   // Allow requests from any origin
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS") // Allow specific HTTP methods
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")       // Allow specific request headers
 		w.WriteHeader(resp.StatusCode)
 		io.WriteString(w, string(resp_body))
 	}
