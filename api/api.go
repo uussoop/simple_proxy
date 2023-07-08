@@ -79,10 +79,6 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 	// Check if the value of the "stream" field is true
 	// if r.Header.Get("Content-Type") == "text/event-stream" {
 
-	for k, v := range resp.Header {
-
-		w.Header().Add(k, v[0])
-	}
 	if streamBody.Stream {
 
 		// read resp body chunk chunk until EOF and io write each chunk if available
@@ -91,7 +87,6 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 			buf := make([]byte, 4*1024)
 			n, err := resp.Body.Read(buf)
 
-			w.Write(buf[:n])
 			if n == 0 {
 				break
 			}
@@ -99,6 +94,11 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 				fmt.Printf("error reading response body: %s\n", err)
 				break
 			}
+			for k, v := range resp.Header {
+
+				w.Header().Add(k, v[0])
+			}
+			w.Write(buf[:n])
 		}
 	} else {
 		resp_body, err := io.ReadAll(resp.Body)
