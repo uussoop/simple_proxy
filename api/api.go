@@ -97,9 +97,7 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 				fmt.Printf("%s: %s\n", k, v[0])
 
 			}
-			w.Header().Set("Access-Control-Allow-Origin", "*")                   // Allow requests from any origin
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS") // Allow specific HTTP methods
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")       // Allow specific request headers
+			w.Header().Set("Access-Control-Allow-Origin", "*")
 			w.Write(buf[:n])
 		}
 	} else {
@@ -115,10 +113,9 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("%s: %s\n", k, v[0])
 
 		}
-		w.Header().Set("Access-Control-Allow-Origin", "*")                   // Allow requests from any origin
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS") // Allow specific HTTP methods
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")       // Allow specific request headers
+
 		w.WriteHeader(resp.StatusCode)
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		io.WriteString(w, string(resp_body))
 	}
 }
