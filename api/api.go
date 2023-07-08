@@ -33,7 +33,7 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 	if streamErr != nil {
 		// Handle JSON decoding error
 		fmt.Printf("Failed to decode JSON: %s\n", streamErr)
-		return
+
 	}
 
 	ctx := r.Context()
@@ -98,7 +98,7 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 				fmt.Printf("%s: %s\n", k, v[0])
 
 			}
-			w.Header().Set("Access-Control-Allow-Origin", "*")
+
 			w.Write(buf[:n])
 		}
 	} else {
@@ -116,7 +116,7 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(resp.StatusCode)
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+
 		io.WriteString(w, string(resp_body))
 	}
 }
