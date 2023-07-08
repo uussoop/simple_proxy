@@ -67,6 +67,7 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 		}
 
 	}
+	req.Header.Add("Access-Control-Allow-Origin", "*")
 	client := &http.Client{Timeout: 50 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
