@@ -1,0 +1,13 @@
+services:
+  proxy:
+    build:
+      context: .
+    container_name: simple-proxy
+    environment:
+      - OPENAI_API_KEY={yourkey}
+      - OPENAI_DOMAIN =api.openai.com
+      - PORT=8080
+      
+    ports:
+      - 8080:8080
+  
