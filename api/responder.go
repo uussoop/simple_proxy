@@ -20,7 +20,7 @@ func updateUsageRequest(body *[]byte, user *database.User) {
 	requestString, requestStringerror := unmarshalOpenaiContent(body, isgzip, isreq)
 	if requestStringerror != nil {
 		fmt.Println(requestStringerror)
-		fmt.Printf("error decoding1 :  %s\n", &requestStringerror)
+
 	}
 	var requestStringCount int
 	for _, value := range requestString {
@@ -32,7 +32,7 @@ func updateUsageRequest(body *[]byte, user *database.User) {
 		}
 	}
 	fmt.Printf("request count %s \n", strconv.Itoa(requestStringCount))
-	*&user.UsageToday = *&user.UsageToday + requestStringCount
+	user.UsageToday = user.UsageToday + requestStringCount
 	database.UpdateUserUsageToday(*user)
 
 }
@@ -47,7 +47,6 @@ func updateUsage(resp *http.Response, resp_body *[]byte, user *database.User) {
 	responseString, responseStringerror := unmarshalOpenaiContent(resp_body, isgzip, false)
 	if responseStringerror != nil {
 		fmt.Println(responseStringerror)
-		fmt.Printf("error decoding2 :  %s\n", &responseStringerror)
 	}
 	if responseString != nil {
 		var responseStringCount int
@@ -61,7 +60,7 @@ func updateUsage(resp *http.Response, resp_body *[]byte, user *database.User) {
 		}
 		fmt.Printf("response count %s \n", strconv.Itoa(responseStringCount))
 
-		*&user.UsageToday = *&user.UsageToday + responseStringCount
+		user.UsageToday = user.UsageToday + responseStringCount
 
 		database.UpdateUserUsageToday(*user)
 	}
@@ -77,28 +76,37 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 		deflatedBody = *body
 	}
 	var splited [][]byte
+
 	if deflatedBody == nil {
 		return nil, errors.New("body is nil")
 	}
-	if strings.Contains("[DONE]", string(deflatedBody)) {
+	if len(string(deflatedBody)) == 0 {
+		return nil, errors.New("body is empty")
+	}
+	if strings.Contains(string(deflatedBody), "[DONE]") {
 		return nil, errors.New("end of stream")
 	}
-	if strings.Contains("data:", string(deflatedBody)) {
+
+	if strings.Contains(string(deflatedBody), "data:") {
 
 		for _, split := range strings.Split(string(deflatedBody), "data:") {
 			// Convert the string to []byte
 			bytes := []byte(split)
 
 			// Append the []byte to the splited slice
-			fmt.Printf("bytes %s", split)
-			splited = append(splited, bytes)
+
+			if len(bytes) != 0 {
+
+				splited = append(splited, bytes)
+			}
 		}
 	} else {
+
 		splited = append(splited, deflatedBody)
 	}
-	fmt.Printf("splited %s \n", splited)
 	var contents []string
 	for _, bytes := range splited {
+
 		streamErr := json.Unmarshal(bytes, &responseBody)
 		if streamErr != nil {
 			fmt.Println(streamErr)
@@ -107,10 +115,9 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 		// check if path choices[0].messages.content or path choices[0].delta.content
 		// if not return error
 		// else return content
-		fmt.Printf("%s", responseBody)
 		if responseBody.(map[string]interface{})["error"] != nil {
 
-			fmt.Sprintf("error openai :  %s\n", streamErr)
+			fmt.Println(streamErr)
 		}
 		if req {
 			choices := responseBody.(map[string]interface{})["messages"].([]interface{})
@@ -121,16 +128,19 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 		}
 		if responseBody.(map[string]interface{})["choices"] != nil {
 			choices := responseBody.(map[string]interface{})["choices"].([]interface{})
+
 			if choices[0].(map[string]interface{})["delta"] != nil {
 				if choices[0].(map[string]interface{})["delta"].(map[string]interface{})["content"] != nil {
 					contents = append(contents, choices[0].(map[string]interface{})["delta"].(map[string]interface{})["content"].(string))
 
 				}
-				if choices[0].(map[string]interface{})["messages"] != nil {
-					if choices[0].(map[string]interface{})["messages"].(map[string]interface{})["content"] != nil {
-						contents = append(contents, choices[0].(map[string]interface{})["messages"].(map[string]interface{})["content"].(string))
 
-					}
+			}
+			if choices[0].(map[string]interface{})["message"] != nil {
+
+				if choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"] != nil {
+					contents = append(contents, choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string))
+
 				}
 			}
 		}

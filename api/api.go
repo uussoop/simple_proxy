@@ -27,7 +27,7 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	authenticationToken := r.Header.Get("Authorization")
 	users, exists := database.Authenticate(&authenticationToken)
-	fmt.Printf("%s", users)
+	// fmt.Printf("%s", users)
 	if exists {
 
 		var streamBody streamRequest

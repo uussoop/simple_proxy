@@ -10,7 +10,6 @@ import (
 	"os/signal"
 
 	"github.com/uussoop/simple_proxy/api"
-	"github.com/uussoop/simple_proxy/config"
 	"github.com/uussoop/simple_proxy/database"
 	"github.com/uussoop/simple_proxy/utils"
 	"gorm.io/driver/sqlite"
@@ -52,12 +51,13 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	server := &http.Server{
-		Addr:    ":" + utils.Getenv("PORT", "8080"),
-		Handler: mux,
-		BaseContext: func(net.Listener) context.Context {
+		Addr:        ":" + utils.Getenv("PORT", "8080"),
+		Handler:     mux,
+		BaseContext: func(net.Listener) context.Context { return ctx },
+		// BaseContext: func(net.Listener) context.Context {
 
-			return context.WithValue(ctx, "config", config.Init_config())
-		},
+		// 	return context.WithValue(ctx, "config", config.Init_config())
+		// },
 	}
 
 	go func() {
