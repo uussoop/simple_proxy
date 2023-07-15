@@ -4,8 +4,8 @@ FROM golang:1.20.4-alpine as builder
 WORKDIR /app
 
 COPY . .
-
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+RUN apk add --no-cache build-base
+RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o main .
 
 # Stage 2: Create the final image using Alpine
 FROM alpine:latest

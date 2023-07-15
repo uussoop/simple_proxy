@@ -168,7 +168,7 @@ func NonStreamResponser(body *[]byte, w http.ResponseWriter, resp *http.Response
 		w.Header().Add(k, v[0])
 
 	}
-
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(resp.StatusCode)
 
 	io.WriteString(w, string(resp_body))
@@ -194,6 +194,7 @@ func StreamResponser(body *[]byte, w http.ResponseWriter, resp *http.Response, u
 
 			w.Header().Add(k, v[0])
 		}
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		_, writeErr := w.Write(buf[:n])
 		if writeErr != nil {
 			fmt.Printf("error writing response body: %s\n", writeErr)
