@@ -27,7 +27,10 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	authenticationToken := r.Header.Get("Authorization")
 	users, exists := database.Authenticate(&authenticationToken)
-	l := database.IsLimited(&users[0])
+	l := true
+	if exists {
+		l = database.IsLimited(&users[0])
+	}
 	// fmt.Printf("%s", users)
 	if exists && !l {
 
