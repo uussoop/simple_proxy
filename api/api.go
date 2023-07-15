@@ -42,7 +42,7 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 		if streamErr != nil {
 			// Handle JSON decoding error
 			fmt.Printf("Failed to decode JSON: %s\n", streamErr)
-			NormalResponse(w, r)
+			NormalResponse(w, r, exists)
 			return
 
 		}
@@ -81,10 +81,10 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 			NonStreamResponser(&bodyCopy, w, resp, &users[0])
 		}
 	} else {
-		NormalResponse(w, r)
+		NormalResponse(w, r, exists)
 	}
 }
-func NormalResponse(w http.ResponseWriter, r *http.Request) {
+func NormalResponse(w http.ResponseWriter, r *http.Request, exists bool) {
 	bodyCopy, readErr := io.ReadAll(r.Body)
 	if readErr != nil {
 		fmt.Printf("error reading body: %s\n", readErr)
@@ -95,6 +95,9 @@ func NormalResponse(w http.ResponseWriter, r *http.Request) {
 
 		req.Header.Add(k, v[0])
 
+	}
+	if exists {
+		req.Header.Add("Authorization", "Bearer "+api_key)
 	}
 	req.Header.Add("Access-Control-Allow-Origin", "*")
 	client := &http.Client{Timeout: 50 * time.Second}
