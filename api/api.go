@@ -66,6 +66,7 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Printf("error making request: %s\n", err)
 	}
+	fmt.Println(exists, l)
 	if exists && !l {
 
 		// resp_body := utils.Deflate_gzip(resp)
@@ -78,7 +79,7 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 			NonStreamResponser(&bodyCopy, w, resp, &users[0])
 		}
 	} else {
-		fmt.Println("user didn't existed")
+		fmt.Println("different kind of request")
 		NormalStreamResponser(resp, w)
 	}
 }
