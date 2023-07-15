@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"strings"
 
 	"gorm.io/gorm"
@@ -91,4 +92,17 @@ func IsLimited(user *User) bool {
 			return true
 		}
 	}
+}
+
+func ResetUsageToday() {
+	var users []User
+	result := Db.Find(&users)
+	if result.Error != nil {
+		fmt.Println(result.Error)
+	}
+	for _, user := range users {
+		user.UsageToday = 0
+		UpdateUserUsageToday(user)
+	}
+
 }

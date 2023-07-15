@@ -9,7 +9,9 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/robfig/cron"
 	"github.com/uussoop/simple_proxy/api"
+	"github.com/uussoop/simple_proxy/config"
 	"github.com/uussoop/simple_proxy/database"
 	"github.com/uussoop/simple_proxy/utils"
 	"gorm.io/driver/sqlite"
@@ -32,18 +34,10 @@ func main() {
 	if migrationerr != nil {
 		panic("failed to migrate")
 	}
-
-	// app := &database.App{
-	// 	DB: db,
-	// }
-	// database.InsertUser(database.User{
-	// 	Name:       "parsa",
-	// 	Token:      "sk-witbJNp5iXr6IKYMBoasdkJKJUHDFSFLldlsflsdfjk1",
-	// 	Limited:    true,
-	// 	UsageToday: 0,
-	// })
-	// h := api.NewBaseHandler(app)
-
+	config.Init_users()
+	crn := cron.New()
+	crn.AddFunc("0 0 12 * * *", database.ResetUsageToday)
+	crn.Start()
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt)
 	mux := http.NewServeMux()

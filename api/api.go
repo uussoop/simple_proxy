@@ -27,8 +27,9 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	authenticationToken := r.Header.Get("Authorization")
 	users, exists := database.Authenticate(&authenticationToken)
+	l := database.IsLimited(&users[0])
 	// fmt.Printf("%s", users)
-	if exists {
+	if exists && !l {
 
 		var streamBody streamRequest
 		bodyCopy, readErr := io.ReadAll(r.Body) // Create a copy of the request body

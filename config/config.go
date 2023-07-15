@@ -32,7 +32,7 @@ func Init_config() *Config {
 
 func Init_users() {
 
-	data, err := os.ReadFile("users.json")
+	data, err := os.ReadFile("config/users.json")
 	if err != nil {
 		fmt.Println("Error reading file:", err)
 		return
