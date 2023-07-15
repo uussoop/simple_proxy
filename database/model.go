@@ -68,7 +68,7 @@ func UpdateUserUsageToday(user User) error {
 }
 func Authenticate(a *string) ([]User, bool) {
 
-	users, userserror := GetUserByToken(strings.Split(*a, " ")[0])
+	users, userserror := GetUserByToken(strings.Split(*a, " ")[1])
 	if userserror != nil {
 		return nil, false
 	}
