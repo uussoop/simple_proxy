@@ -28,6 +28,14 @@ func InsertUser(user User) error {
 
 	return nil
 }
+func InsertUsers(user []User) error {
+	result := Db.Create(&user)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}
 
 func GetAllUsers() ([]User, error) {
 	var users []User
@@ -68,5 +76,19 @@ func Authenticate(a *string) ([]User, bool) {
 		return users, true
 	} else {
 		return nil, false
+	}
+}
+
+func IsLimited(user *User) bool {
+
+	if user.Limited {
+		return true
+	} else {
+		if user.UsageToday < 40000 {
+			return false
+		} else {
+			user.Limited = true
+			return true
+		}
 	}
 }

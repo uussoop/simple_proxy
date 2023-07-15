@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/uussoop/simple_proxy/database"
 )
 
 type Config struct {
@@ -25,5 +27,35 @@ func Init_config() *Config {
 		log.Fatal(err)
 	}
 	return &configs
+
+}
+
+func Init_users() {
+
+	data, err := os.ReadFile("users.json")
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return
+	}
+
+	// Define the struct to hold the JSON data
+	type UserData struct {
+		Users []database.User `json:"users"`
+	}
+
+	// Unmarshal JSON data into UserData struct
+	var userData UserData
+	err = json.Unmarshal(data, &userData)
+	if err != nil {
+		fmt.Println("Error unmarshaling JSON:", err)
+		return
+	}
+
+	// Insert users into the database
+	err = database.InsertUsers(userData.Users)
+	if err != nil {
+		fmt.Println("Error inserting users:", err)
+		return
+	}
 
 }
