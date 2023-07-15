@@ -19,7 +19,7 @@ type streamRequest struct {
 	// Add other fields of the request body if applicable
 }
 
-var api_key string = utils.Getenv("OPENAI_API_KEY", "")
+var api_key string = utils.Getenv("OPENAI_API_KEY", "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")
 
 var domain string = utils.Getenv("OPENAI_DOMAIN", "api.openai.com")
 

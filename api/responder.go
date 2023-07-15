@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -106,12 +107,14 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 	}
 	var contents []string
 	for _, bytes := range splited {
+		fmt.Printf("hiiiiiiiiiiiiiiii %s \n", string(bytes))
 
 		streamErr := json.Unmarshal(bytes, &responseBody)
 		if streamErr != nil {
 			fmt.Println(streamErr)
 
 		}
+
 		// check if path choices[0].messages.content or path choices[0].delta.content
 		// if not return error
 		// else return content
@@ -174,28 +177,28 @@ func NonStreamResponser(body *[]byte, w http.ResponseWriter, resp *http.Response
 	io.WriteString(w, string(resp_body))
 }
 func StreamResponser(body *[]byte, w http.ResponseWriter, resp *http.Response, user *database.User) {
+
 	updateUsageRequest(body, user)
-
-	// read resp body chunk chunk until EOF and io write each chunk if available
-	for { // read chunk
-
-		buf := make([]byte, 4*1024)
-		n, err := resp.Body.Read(buf)
-		buffer := buf[:n]
-		updateUsage(resp, &buffer, user)
-		if n == 0 {
+	reader := bufio.NewReader(resp.Body)
+	for {
+		line, err := reader.ReadBytes('\n')
+		fmt.Printf("lennnnnnnnn %s", len(line))
+		if err == io.EOF {
 			break
 		}
-		if err != nil && err != io.EOF {
-			fmt.Printf("error reading response body: %s\n", err)
-			break
+		if len(line) < 5 {
+			continue
 		}
+		updateUsage(resp, &line, user)
 		for k, v := range resp.Header {
 
 			w.Header().Add(k, v[0])
 		}
+		if err != nil {
+			fmt.Printf("error reading response body: %s\n", err)
+		}
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		_, writeErr := w.Write(buf[:n])
+		_, writeErr := w.Write(line)
 		if writeErr != nil {
 			fmt.Printf("error writing response body: %s\n", writeErr)
 			break
@@ -203,7 +206,37 @@ func StreamResponser(body *[]byte, w http.ResponseWriter, resp *http.Response, u
 		if f, ok := w.(http.Flusher); ok {
 			f.Flush()
 		}
+
 	}
+	// read resp body chunk chunk until EOF and io write each chunk if available
+	// for { // read chunk
+	// 	// use bufio reader.ReadBytes('\n')
+
+	// 	buf := make([]byte, 200)
+	// 	n, err := resp.Body.Read(buf)
+	// 	buffer := buf[:n]
+	// 	updateUsage(resp, &buffer, user)
+	// 	if n == 0 {
+	// 		break
+	// 	}
+	// 	if err != nil && err != io.EOF {
+	// 		fmt.Printf("error reading response body: %s\n", err)
+	// 		break
+	// 	}
+	// 	for k, v := range resp.Header {
+
+	// 		w.Header().Add(k, v[0])
+	// 	}
+	// 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	// 	_, writeErr := w.Write(buf[:n])
+	// 	if writeErr != nil {
+	// 		fmt.Printf("error writing response body: %s\n", writeErr)
+	// 		break
+	// 	}
+	// 	if f, ok := w.(http.Flusher); ok {
+	// 		f.Flush()
+	// 	}
+	// }
 }
 
 func NormalStreamResponser(resp *http.Response, w http.ResponseWriter) {
