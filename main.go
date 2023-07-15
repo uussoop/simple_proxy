@@ -19,7 +19,7 @@ import (
 )
 
 func main() {
-	db, dberr := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	db, dberr := gorm.Open(sqlite.Open("db/test.db"), &gorm.Config{})
 	if dberr != nil {
 		panic("failed to connect to database")
 	}

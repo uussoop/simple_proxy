@@ -19,7 +19,7 @@ type streamRequest struct {
 	// Add other fields of the request body if applicable
 }
 
-var api_key string = utils.Getenv("OPENAI_API_KEY", "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")
+var api_key string = utils.Getenv("OPENAI_API_KEY", "")
 
 var domain string = utils.Getenv("OPENAI_DOMAIN", "api.openai.com")
 
@@ -81,7 +81,12 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 			NonStreamResponser(&bodyCopy, w, resp, &users[0])
 		}
 	} else {
-		NormalResponse(w, r, exists)
+		if r.Method == "POST" {
+			io.WriteString(w, `{"error":" you are limited for today"}`)
+			return
+		} else {
+			NormalResponse(w, r, exists)
+		}
 	}
 }
 func NormalResponse(w http.ResponseWriter, r *http.Request, exists bool) {
