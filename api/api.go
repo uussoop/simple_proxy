@@ -93,12 +93,19 @@ func NormalResponse(w http.ResponseWriter, r *http.Request, exists bool) {
 	req, err := http.NewRequest(strings.ToUpper(r.Method), "https://"+domain+path, bytes.NewBuffer(bodyCopy))
 	for k, v := range r.Header {
 
-		req.Header.Add(k, v[0])
+		if k == "Authorization" {
+			if exists {
+				req.Header.Add(k, "Bearer "+api_key)
+			} else {
+				req.Header.Add(k, v[0])
+			}
+
+		} else {
+			req.Header.Add(k, v[0])
+		}
 
 	}
-	if exists {
-		req.Header.Add("Authorization", "Bearer "+api_key)
-	}
+
 	req.Header.Add("Access-Control-Allow-Origin", "*")
 	client := &http.Client{Timeout: 50 * time.Second}
 	resp, err := client.Do(req)
