@@ -207,6 +207,7 @@ func StreamResponser(body *[]byte, w http.ResponseWriter, resp *http.Response, u
 }
 
 func NormalStreamResponser(resp *http.Response, w http.ResponseWriter) {
+
 	resp_body, err := io.ReadAll(resp.Body)
 	// database.UpdateUser(database.User{Token: authenticationToken, UsageToday: users[0].UsageToday + requestStringCount + responseStringCount})
 	if err != nil {
