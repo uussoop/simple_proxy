@@ -32,42 +32,41 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 		l = database.IsLimited(&users[0])
 	}
 	// fmt.Printf("%s", users)
+	var streamBody streamRequest
+	bodyCopy, readErr := io.ReadAll(r.Body) // Create a copy of the request body
+	// r.Body = io.NopCloser(bytes.NewBuffer(bodyCopy)) // Restore the request body with the copy
+
+	streamErr := json.Unmarshal(bodyCopy, &streamBody) // Decode the copied body
+	if streamErr != nil {
+		// Handle JSON decoding error
+		fmt.Printf("Failed to decode JSON: %s\n", streamErr)
+
+	}
+
+	// ctx := r.Context()
+
+	if readErr != nil {
+		fmt.Printf("error reading body: %s\n", readErr)
+	}
+	path := path.Clean(r.URL.Path)
+	// use differ
+
+	req, err := http.NewRequest(strings.ToUpper(r.Method), "https://"+domain+path, bytes.NewBuffer(bodyCopy))
+	for k, v := range r.Header {
+		if k == "Authorization" {
+			req.Header.Add(k, "Bearer "+api_key)
+		} else {
+			req.Header.Add(k, v[0])
+		}
+
+	}
+	req.Header.Add("Access-Control-Allow-Origin", "*")
+	client := &http.Client{Timeout: 50 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("error making request: %s\n", err)
+	}
 	if exists && !l {
-
-		var streamBody streamRequest
-		bodyCopy, readErr := io.ReadAll(r.Body) // Create a copy of the request body
-		// r.Body = io.NopCloser(bytes.NewBuffer(bodyCopy)) // Restore the request body with the copy
-
-		streamErr := json.Unmarshal(bodyCopy, &streamBody) // Decode the copied body
-		if streamErr != nil {
-			// Handle JSON decoding error
-			fmt.Printf("Failed to decode JSON: %s\n", streamErr)
-
-		}
-
-		// ctx := r.Context()
-
-		if readErr != nil {
-			fmt.Printf("error reading body: %s\n", readErr)
-		}
-		path := path.Clean(r.URL.Path)
-		// use differ
-
-		req, err := http.NewRequest(strings.ToUpper(r.Method), "https://"+domain+path, bytes.NewBuffer(bodyCopy))
-		for k, v := range r.Header {
-			if k == "Authorization" {
-				req.Header.Add(k, "Bearer "+api_key)
-			} else {
-				req.Header.Add(k, v[0])
-			}
-
-		}
-		req.Header.Add("Access-Control-Allow-Origin", "*")
-		client := &http.Client{Timeout: 50 * time.Second}
-		resp, err := client.Do(req)
-		if err != nil {
-			fmt.Printf("error making request: %s\n", err)
-		}
 
 		// resp_body := utils.Deflate_gzip(resp)
 
@@ -80,6 +79,6 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		fmt.Println("user didn't existed")
-		io.WriteString(w, "user not found")
+		NormalStreamResponser(resp, w)
 	}
 }

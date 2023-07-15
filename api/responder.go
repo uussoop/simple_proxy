@@ -205,3 +205,21 @@ func StreamResponser(body *[]byte, w http.ResponseWriter, resp *http.Response, u
 		}
 	}
 }
+
+func NormalStreamResponser(resp *http.Response, w http.ResponseWriter) {
+	resp_body, err := io.ReadAll(resp.Body)
+	// database.UpdateUser(database.User{Token: authenticationToken, UsageToday: users[0].UsageToday + requestStringCount + responseStringCount})
+	if err != nil {
+		fmt.Printf("error reading response body: %s\n", err)
+	}
+
+	for k, v := range resp.Header {
+
+		w.Header().Add(k, v[0])
+
+	}
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(resp.StatusCode)
+
+	io.WriteString(w, string(resp_body))
+}
