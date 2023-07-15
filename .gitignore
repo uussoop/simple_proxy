@@ -1,3 +1,6 @@
 **/docker-compose.yaml
 **/config.json
+**/users.json
 **/test.db
+**/test-py
+
