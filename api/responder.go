@@ -45,6 +45,9 @@ func updateUsage(resp *http.Response, resp_body *[]byte, user *database.User) {
 	} else {
 		isgzip = false
 	}
+	if !strings.Contains(string(*resp_body), "data:") {
+		return
+	}
 	responseString, responseStringerror := unmarshalOpenaiContent(resp_body, isgzip, false)
 	if responseStringerror != nil {
 		fmt.Println(responseStringerror)
@@ -182,6 +185,7 @@ func StreamResponser(body *[]byte, w http.ResponseWriter, resp *http.Response, u
 	reader := bufio.NewReader(resp.Body)
 	for {
 		line, err := reader.ReadBytes('\n')
+
 		if err == io.EOF {
 			break
 		}
