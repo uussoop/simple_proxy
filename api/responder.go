@@ -185,9 +185,7 @@ func StreamResponser(body *[]byte, w http.ResponseWriter, resp *http.Response, u
 		if err == io.EOF {
 			break
 		}
-		if len(line) < 5 {
-			continue
-		}
+
 		updateUsage(resp, &line, user)
 		for k, v := range resp.Header {
 
