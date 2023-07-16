@@ -182,7 +182,6 @@ func StreamResponser(body *[]byte, w http.ResponseWriter, resp *http.Response, u
 	reader := bufio.NewReader(resp.Body)
 	for {
 		line, err := reader.ReadBytes('\n')
-		fmt.Printf("lennnnnnnnn %s", len(line))
 		if err == io.EOF {
 			break
 		}
