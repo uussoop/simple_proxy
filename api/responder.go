@@ -196,7 +196,8 @@ func StreamResponser(body *[]byte, w http.ResponseWriter, resp *http.Response, u
 			w.Header().Add(k, v[0])
 		}
 		if err != nil {
-			fmt.Printf("error reading response body: %s\n", err)
+			fmt.Printf("error reading response body stream: %s\n", err)
+
 		}
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		_, writeErr := w.Write(line)

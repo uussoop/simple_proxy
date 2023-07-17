@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"path"
 	"strings"
-	"time"
 
 	"github.com/uussoop/simple_proxy/database"
 	"github.com/uussoop/simple_proxy/utils"
@@ -65,7 +64,7 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 
 		}
 		req.Header.Add("Access-Control-Allow-Origin", "*")
-		client := &http.Client{Timeout: 50 * time.Second}
+		client := &http.Client{Timeout: 0}
 		resp, err := client.Do(req)
 		if err != nil {
 			fmt.Printf("error making request: %s\n", err)
@@ -112,7 +111,7 @@ func NormalResponse(w http.ResponseWriter, r *http.Request, exists bool) {
 	}
 
 	req.Header.Add("Access-Control-Allow-Origin", "*")
-	client := &http.Client{Timeout: 50 * time.Second}
+	client := &http.Client{Timeout: 0}
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Printf("error making request: %s\n", err)
