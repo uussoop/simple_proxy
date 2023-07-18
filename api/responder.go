@@ -181,7 +181,7 @@ func NonStreamResponser(body *[]byte, w http.ResponseWriter, resp *http.Response
 }
 func StreamResponser(body *[]byte, w http.ResponseWriter, resp *http.Response, user *database.User) {
 
-	updateUsageRequest(body, user)
+	go updateUsageRequest(body, user)
 	reader := bufio.NewReader(resp.Body)
 	for {
 		line, err := reader.ReadBytes('\n')
@@ -190,7 +190,7 @@ func StreamResponser(body *[]byte, w http.ResponseWriter, resp *http.Response, u
 			break
 		}
 
-		updateUsage(resp, &line, user)
+		go updateUsage(resp, &line, user)
 		for k, v := range resp.Header {
 
 			w.Header().Add(k, v[0])
