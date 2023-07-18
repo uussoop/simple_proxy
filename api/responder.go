@@ -91,7 +91,7 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 		return nil, errors.New("end of stream")
 	}
 
-	if strings.Contains(string(deflatedBody), "data:") {
+	if strings.Contains(string(deflatedBody), "data:") && !req {
 
 		for _, split := range strings.Split(string(deflatedBody), "data:") {
 			// Convert the string to []byte
