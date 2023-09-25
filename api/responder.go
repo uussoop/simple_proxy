@@ -126,11 +126,19 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 			fmt.Println(streamErr)
 		}
 		if req {
-			choices := responseBody.(map[string]interface{})["messages"].([]interface{})
-			if choices[0].(map[string]interface{})["content"] != nil {
-				contents = append(contents, choices[0].(map[string]interface{})["content"].(string))
+			prompt, pok := responseBody.(map[string]interface{})["prompt"].(string)
+			message, ok := responseBody.(map[string]interface{})["messages"].([]interface{})
+			if ok {
+				if message[0].(map[string]interface{})["content"] != nil {
+					contents = append(contents, message[0].(map[string]interface{})["content"].(string))
+
+				}
+			} else if pok {
+
+				contents = append(contents, prompt)
 
 			}
+
 		}
 		if responseBody.(map[string]interface{})["choices"] != nil {
 			choices := responseBody.(map[string]interface{})["choices"].([]interface{})
@@ -146,6 +154,13 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 
 				if choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"] != nil {
 					contents = append(contents, choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string))
+
+				}
+			}
+			if choices[0].(map[string]interface{})["text"] != nil {
+
+				if choices[0].(map[string]interface{})["text"].(map[string]interface{})["content"] != nil {
+					contents = append(contents, choices[0].(map[string]interface{})["text"].(string))
 
 				}
 			}
