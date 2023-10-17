@@ -68,6 +68,7 @@ func UpdateUserUsageToday(user User) error {
 }
 func Authenticate(a *string) ([]User, bool) {
 	tokenls := strings.Split(*a, " ")
+	fmt.Println(tokenls)
 	if len(tokenls) > 1 {
 		users, userserror := GetUserByToken(strings.TrimSpace(tokenls[1]))
 		if userserror != nil {
