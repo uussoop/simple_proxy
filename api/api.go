@@ -24,11 +24,13 @@ var api_key *string
 var domain *string
 
 func Forwarder(w http.ResponseWriter, r *http.Request) {
-	e := r.Context().Value(utils.EndpointKey).(*database.Endpoint)
-	m := r.Context().Value(utils.ModelKey).(*database.Model)
+	e, _ := r.Context().Value(utils.EndpointKey).(*database.Endpoint)
+	m, _ := r.Context().Value(utils.ModelKey).(*database.Model)
 
-	api_key = &e.Token
-	domain = &e.Url
+	if e != nil {
+		api_key = &e.Token
+		domain = &e.Url
+	}
 
 	defer r.Body.Close()
 	authenticationToken := r.Header.Get("Authorization")
@@ -85,7 +87,9 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Printf("error making request: %s\n", err)
 			ServerNotReady(w)
-			e.DeActivate()
+			if e != nil {
+				e.DeActivate()
+			}
 			return
 		}
 
