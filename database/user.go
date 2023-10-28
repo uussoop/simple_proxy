@@ -15,6 +15,7 @@ type User struct {
 	Token string
 
 	Endpoints []Endpoint `gorm:"many2many:user_endpoints;"`
+	Models    []Model    `gorm:"many2many:user_models;"`
 
 	RequestCount int
 	RateLimit    int `gorm:"default:3"`
@@ -99,6 +100,21 @@ func (u *User) SetLastSeen(t time.Time) {
 
 func (u *User) ResetRequestCount() {
 	Db.Model(&u).Update("request_count", 0)
+}
+
+func (u *User) HasModel(m Model) bool {
+	var models []Model
+
+	Db.Model(&u).Association("Models").Find(&models)
+
+	for _, model := range models {
+
+		if model.ID == m.ID || model.HasSubModel(m.Name) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (user *User) IsRateLimited() bool {

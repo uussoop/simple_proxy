@@ -24,9 +24,11 @@ func updateUsageRequest(body *[]byte, user *database.User, userEndpointUsage *da
 
 	}
 	var requestStringCount int
+	m := database.Model{}
+	m.GetByID(userEndpointUsage.ModelID)
 	for _, value := range requestString {
 
-		newRequestStringCount, newReqscErr := utils.Count_tokens(value)
+		newRequestStringCount, newReqscErr := utils.CountTokens(m.Name, value)
 		requestStringCount += newRequestStringCount
 		if newReqscErr != nil {
 			fmt.Println(newReqscErr)
@@ -56,10 +58,12 @@ func updateUsage(resp *http.Response, resp_body *[]byte, user *database.User, us
 	if responseStringerror != nil {
 		fmt.Println(responseStringerror)
 	}
+	m := database.Model{}
+	m.GetByID(userEndpointUsage.ModelID)
 	if responseString != nil {
 		var responseStringCount int
 		for _, value := range responseString {
-			newResponseStringCount, newResscErr := utils.Count_tokens(value)
+			newResponseStringCount, newResscErr := utils.CountTokens(m.Name, value)
 			responseStringCount += newResponseStringCount
 			if newResscErr != nil {
 				fmt.Println(newResscErr)

@@ -65,6 +65,11 @@ func SetOpenAIServer(next http.Handler) http.Handler {
 			return
 		}
 
+		if !u.HasModel(m) {
+			api.BadRequest(w, "user doesn't have access to this model")
+			return
+		}
+
 		for _, en := range ens {
 			rim, _ := en.GetRequestInMin()
 			rid, _ := en.GetRequestInDay()
@@ -87,6 +92,11 @@ func SetOpenAIServer(next http.Handler) http.Handler {
 		customWriter := &utils.StatusCaptureResponseWriter{ResponseWriter: w}
 
 		logrus.Debug("user <", u.Name, "> is sending request to endpoint <", leastBusyEndpoint.Name, ">")
+
+		use := database.EndpointModelUsage{}
+
+		use.GetOrCreate(*u, leastBusyEndpoint, m)
+
 		next.ServeHTTP(customWriter, r.Clone(c))
 		if customWriter.StatusCode >= 200 && customWriter.StatusCode < 300 {
 			leastBusyEndpoint.Requested()

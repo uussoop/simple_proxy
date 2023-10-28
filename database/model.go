@@ -10,6 +10,10 @@ type Model struct {
 	SubModels []Model `json:"sub_models" gorm:"many2many:model_submodels;"`
 }
 
+func (m *Model) GetByID(id uint) {
+	Db.First(&m, id)
+}
+
 func (m *Model) Create(name string, subModels []Model) (err error) {
 	Db.Where("name = ?", name).First(&m)
 

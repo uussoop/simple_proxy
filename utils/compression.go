@@ -20,6 +20,10 @@ func Deflate_gzip(r *http.Response) []byte {
 		reader = r.Body
 	}
 	defer reader.Close()
+	if err != nil {
+		fmt.Printf("error reading body: %s\n", err)
+	}
+
 	resp_body, err := io.ReadAll(reader)
 	if err != nil {
 		fmt.Printf("error reading body: %s\n", err)
@@ -31,6 +35,9 @@ func Deflate_gzip_byte(r []byte) []byte {
 	var reader io.ReadCloser
 	var err error
 	reader, err = gzip.NewReader(bytes.NewReader(r))
+	if err != nil {
+		fmt.Printf("error reading body: %s\n", err)
+	}
 	defer reader.Close()
 	resp_body, err := io.ReadAll(reader)
 	if err != nil {

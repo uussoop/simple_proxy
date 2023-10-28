@@ -72,6 +72,8 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		logrus.Info(req)
+
 		if err != nil {
 			fmt.Print("error in creating new request: ", err)
 			return
@@ -87,11 +89,9 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		userEndpointModel := database.EndpointModelUsage{
-			UserID:     users[0].ID,
-			EndpointID: e.ID,
-			ModelID:    m.ID,
-		}
+		userEndpointModel := database.EndpointModelUsage{}
+
+		userEndpointModel.GetOrCreate(users[0], *e, *m)
 
 		// resp_body := utils.Deflate_gzip(resp)
 
@@ -111,6 +111,8 @@ func NormalResponse(w http.ResponseWriter, r *http.Request, exists bool) {
 	}
 	path := path.Clean(r.URL.Path)
 	req, err := http.NewRequest(strings.ToUpper(r.Method), *domain+path, bytes.NewBuffer(bodyCopy))
+
+	logrus.Info(req)
 
 	if err != nil {
 		fmt.Print("error in creating new request: ", err)

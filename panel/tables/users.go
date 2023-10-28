@@ -88,6 +88,38 @@ func (s *SystemTable) GetUserTable(ctx *context.Context) (userTable table.Table)
 
 				return labels
 			}).FieldFilterable()
+		info.AddField("Models", "name", db.Text).
+			FieldJoin(types.Join{
+				Table:     "proxy_user_models",
+				JoinField: "user_id",
+				Field:     "id",
+			}).
+			FieldJoin(types.Join{
+				Table:     "proxy_models",
+				JoinField: "id",
+				Field:     "model_id",
+				BaseTable: "proxy_user_models",
+			}).
+			FieldDisplay(func(model types.FieldModel) interface{} {
+				fmt.Print(model.Value)
+				labels := template.HTML("")
+				labelTpl := label().SetType("success")
+
+				labelValues := strings.Split(model.Value, types.JoinFieldValueDelimiter)
+				for key, label := range labelValues {
+					if key == len(labelValues)-1 {
+						labels += labelTpl.SetContent(template.HTML(label)).GetContent()
+					} else {
+						labels += labelTpl.SetContent(template.HTML(label)).GetContent() + ""
+					}
+				}
+
+				if labels == template.HTML("") {
+					return "no endpoints"
+				}
+
+				return labels
+			}).FieldFilterable()
 
 		info.SetDeleteFn(func(idArr []string) (err error) {
 			var ids = interfaces(idArr)
@@ -145,6 +177,23 @@ func (s *SystemTable) GetUserTable(ctx *context.Context) (userTable table.Table)
 			}).FieldHelpMsg(template.HTML("no corresponding options?") +
 			link("/admin/info/endpoints/new", "Create here."))
 
+		formList.AddField("Models", "models", db.Varchar, form.Select).
+			FieldOptionsFromTable("proxy_models", "name", "id").
+			FieldDisplay(func(model types.FieldModel) interface{} {
+				var endpoints []string
+
+				if model.ID == "" {
+					return endpoints
+				}
+				permissionModel, _ := s.table("proxy_user_models").
+					Select("model_id").Where("user_id", "=", model.ID).All()
+				for _, v := range permissionModel {
+					endpoints = append(endpoints, strconv.FormatInt(v["model_id"].(int64), 10))
+				}
+				return endpoints
+			}).FieldHelpMsg(template.HTML("no corresponding options?") +
+			link("/admin/info/models/new", "Create here."))
+
 		formList.AddField("CreatedAt", "created_at", db.Timestamp, form.Datetime).FieldNotAllowEdit().FieldDefault(time.Now().String())
 
 		formList.SetTable("proxy_users").SetTitle("Users").SetDescription("Users")
@@ -174,6 +223,21 @@ func (s *SystemTable) GetUserTable(ctx *context.Context) (userTable table.Table)
 								"endpoint_id": v,
 								"updated_at":  time.Now().String(),
 								"created_at":  time.Now().String(),
+							})
+
+						if db.CheckError(insertUserRoleErr, db.INSERT) {
+							return insertUserRoleErr, nil
+						}
+					}
+
+					modelsIds := values["models[]"]
+					logrus.Info(modelsIds)
+					for _, v := range modelsIds {
+						_, insertUserRoleErr = s.connection().WithTx(tx).
+							Table("proxy_user_models").
+							Insert(dialect.H{
+								"user_id":  modelId,
+								"model_id": v,
 							})
 
 						if db.CheckError(insertUserRoleErr, db.INSERT) {
@@ -228,6 +292,26 @@ func (s *SystemTable) GetUserTable(ctx *context.Context) (userTable table.Table)
 							return insertUserRoleErr, nil
 						}
 					}
+
+					_ = s.connection().WithTx(tx).
+						Table("proxy_user_models").
+						Where("user_id", "=", modelId).
+						Delete()
+
+					modelsIds := values["models[]"]
+					logrus.Info(modelsIds)
+					for _, v := range modelsIds {
+						_, insertUserRoleErr = s.connection().WithTx(tx).
+							Table("proxy_user_models").
+							Insert(dialect.H{
+								"user_id":  modelId,
+								"model_id": v,
+							})
+
+						if db.CheckError(insertUserRoleErr, db.INSERT) {
+							return insertUserRoleErr, nil
+						}
+					}
 					return nil, nil
 				})
 
@@ -242,7 +326,7 @@ func (s *SystemTable) GetUserTable(ctx *context.Context) (userTable table.Table)
 	}
 
 	userTable.GetForm().SetTabGroups(types.
-		NewTabGroups("name", "token", "rate_limit", "request_count", "token_limit", "usage_today", "limited", "endpoints", "created_at")).
+		NewTabGroups("name", "token", "rate_limit", "request_count", "token_limit", "usage_today", "limited", "endpoints", "models", "created_at")).
 		// AddGroup("phone", "role", "request_count", "updated_at")).
 		SetTabHeaders("New User")
 
