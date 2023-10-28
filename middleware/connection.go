@@ -28,6 +28,8 @@ func SetOpenAIServer(next http.Handler) http.Handler {
 			return
 		}
 
+		logrus.Infof("%+v", r)
+
 		bodyCopy, readErr := io.ReadAll(r.Body)
 
 		if readErr != nil {
@@ -42,12 +44,15 @@ func SetOpenAIServer(next http.Handler) http.Handler {
 
 		responseBody := &body{}
 
+		logrus.Info(bodyCopy)
+
 		err = json.Unmarshal(bodyCopy, &responseBody)
 
 		r.Body = io.NopCloser(bytes.NewBuffer(bodyCopy))
 
 		if err != nil {
 			logrus.Errorf("couldn't unmarshal the model: %s\n", err)
+			next.ServeHTTP(w, r)
 			return
 		}
 
