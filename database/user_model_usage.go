@@ -1,6 +1,8 @@
 package database
 
 import (
+	"sync"
+
 	"github.com/rodrikv/openai_proxy/pkg/cache"
 	"gorm.io/gorm"
 )
@@ -46,6 +48,8 @@ func (mu *EndpointModelUsage) GetOrCreate(u User, e Endpoint, m Model) (created 
 	return
 }
 
+var usageLock sync.Mutex
+
 func (mu *EndpointModelUsage) Increase(tokenCount uint) (err error) {
 	c, ok := cache.GetCache().Get(mu.User.Name + mu.Endpoint.Name + mu.LLMModel.Name)
 
@@ -59,6 +63,8 @@ func (mu *EndpointModelUsage) Increase(tokenCount uint) (err error) {
 	}
 
 	go func() {
+		usageLock.Lock()
+		defer usageLock.Unlock()
 		err = Db.Model(&mu).Update("token_used", usage).Error
 	}()
 

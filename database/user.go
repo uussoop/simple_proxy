@@ -2,6 +2,7 @@ package database
 
 import (
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/rodrikv/openai_proxy/pkg/cache"
@@ -18,9 +19,9 @@ type User struct {
 	Models    []Model    `gorm:"many2many:user_models;"`
 
 	RequestCount int
-	RateLimit    int `gorm:"default:3"`
-	Limited      bool
-	TokenLimit   int `gorm:"default:40000"`
+	RateLimit    int  `gorm:"default:3"`
+	Limited      bool `gorm:"default:false"`
+	TokenLimit   int  `gorm:"default:40000"`
 	UsageToday   int
 	LastSeen     *time.Time
 }
@@ -52,6 +53,8 @@ func (u *User) GetEndpoints() (endpoints []Endpoint, err error) {
 	return
 }
 
+var userRequestLock sync.Mutex
+
 func (u *User) Requested() {
 	key := "request_count:" + u.Name
 	c := cache.GetCache()
@@ -60,6 +63,8 @@ func (u *User) Requested() {
 
 	c.Set(key, requestCount+1, time.Minute*1)
 	go func() {
+		userRequestLock.Lock()
+		defer userRequestLock.Unlock()
 		Db.Model(&u).Update("request_count", requestCount+1)
 	}()
 }
@@ -77,6 +82,8 @@ func (u *User) RemoveRequested() {
 	c.Set(key, requestCount-1, time.Minute*1)
 
 	go func() {
+		userRequestLock.Lock()
+		defer userRequestLock.Unlock()
 		Db.Model(&u).Update("request_count", requestCount-1)
 	}()
 }
@@ -89,6 +96,9 @@ func (u *User) GetRequestCount() int {
 	if is {
 		return v.(int)
 	}
+
+	userRequestLock.Lock()
+	defer userRequestLock.Unlock()
 	Db.First(&u, u.ID)
 	c.Set(key, u.RequestCount, time.Minute*1)
 	return u.RequestCount
@@ -99,6 +109,8 @@ func (u *User) SetLastSeen(t time.Time) {
 }
 
 func (u *User) ResetRequestCount() {
+	userRequestLock.Lock()
+	defer userRequestLock.Unlock()
 	Db.Model(&u).Update("request_count", 0)
 }
 

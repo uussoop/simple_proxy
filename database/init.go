@@ -180,6 +180,7 @@ func InitDatabase() {
 			TablePrefix: "proxy_",
 		},
 	})
+
 	if dberr != nil {
 		panic("failed to connect to database")
 	}

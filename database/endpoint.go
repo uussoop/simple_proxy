@@ -2,6 +2,7 @@ package database
 
 import (
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/rodrikv/openai_proxy/pkg/cache"
@@ -81,6 +82,8 @@ func (e *Endpoint) GetUsers() (users []User, err error) {
 	return
 }
 
+var connLock sync.Mutex
+
 func (e *Endpoint) GetConnection() int {
 	c := cache.GetCache()
 	key := "endpoint:connection:" + e.Name
@@ -90,6 +93,9 @@ func (e *Endpoint) GetConnection() int {
 	if is {
 		return v.(int)
 	}
+
+	connLock.Lock()
+	defer connLock.Unlock()
 
 	Db.First(&e, e.ID)
 
@@ -105,6 +111,8 @@ func (e *Endpoint) AddConnection() (err error) {
 
 	c.Set(key, conn+1, time.Minute*1)
 	go func() {
+		connLock.Lock()
+		defer connLock.Unlock()
 		Db.Model(&e).Update("connections", conn+1)
 	}()
 	return
@@ -122,10 +130,14 @@ func (e *Endpoint) RemoveConnection() (err error) {
 
 	c.Set(key, conn-1, time.Minute*1)
 	go func() {
+		connLock.Lock()
+		defer connLock.Unlock()
 		Db.Model(&e).Update("connections", conn-1)
 	}()
 	return
 }
+
+var requestLock sync.Mutex
 
 func (e *Endpoint) GetRequestInMin() (int, bool) {
 	c := cache.GetCache()
@@ -136,6 +148,8 @@ func (e *Endpoint) GetRequestInMin() (int, bool) {
 	if is {
 		return v.(int), is
 	}
+	requestLock.Lock()
+	defer requestLock.Unlock()
 
 	Db.First(&e, e.ID)
 
@@ -151,6 +165,8 @@ func (e *Endpoint) GetRequestInDay() (int, bool) {
 	if is {
 		return v.(int), is
 	}
+	requestLock.Lock()
+	defer requestLock.Unlock()
 
 	Db.First(&e, e.ID)
 
@@ -158,6 +174,8 @@ func (e *Endpoint) GetRequestInDay() (int, bool) {
 }
 
 func update_field(e *Endpoint, field string, v int) {
+	requestLock.Lock()
+	defer requestLock.Unlock()
 	Db.Model(&e).Update(field, v)
 }
 
