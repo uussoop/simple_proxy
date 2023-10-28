@@ -1,0 +1,16 @@
+# **/docker-compose.yaml
+**/config.json
+**/users.json
+**/test.db
+**/test-py
+**/endpoints.json
+**/user_endpoints.json
+**/models.json
+
+.vscode
+test.py
+*.db
+!admin.db
+!config.json
+**/logs
+*.log

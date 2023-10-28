@@ -1,0 +1,14 @@
+services:
+  proxy:
+    build:
+      context: .
+    environment:
+      - PORT=8080
+      - PANEL_PORT=8081
+      - DB_URL=admin.db
+      - DB_NAME=sqlite
+      - CONFIG_FILE=config.json
+    ports:
+      - 8080:8080
+      - 8081:8081
+    restart: always
