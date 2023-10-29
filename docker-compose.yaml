@@ -1,8 +1,5 @@
 services:
   proxy:
-    networks:
-      - proxy_network
-      - default
     build:
       context: .
     environment:
@@ -14,8 +11,14 @@ services:
     ports:
       - 8080:8080
       - 8081:8081
+    networks:
+      - proxy_network
+      - default
     restart: always
-
+    # for saving changes
+    # uncomment lines below
+    # volumes:
+    #   - ./admin.db:/app/admin.db
 networks:
   proxy_network:
     external: true
