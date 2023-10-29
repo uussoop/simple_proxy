@@ -30,6 +30,16 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 	if e != nil {
 		api_key = &e.Token
 		domain = &e.Url
+	} else {
+		e := &database.Endpoint{}
+		e.GetByName("beastbrain")
+
+		if e.ID == 0 {
+			panic("one of your endpoint names has to be beastbrain!")
+		}
+
+		api_key = &e.Token
+		domain = &e.Url
 	}
 
 	defer r.Body.Close()

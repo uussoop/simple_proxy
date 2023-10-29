@@ -27,6 +27,11 @@ type Endpoint struct {
 	Users  []User  `gorm:"many2many:user_endpoints;"`
 }
 
+func (e *Endpoint) GetByName(name string) (err error) {
+	Db.Where("name = ?", name).First(&e)
+	return
+}
+
 func (e *Endpoint) Create(name, url, token string, concurrent int, isActive bool, RPM, RPD *int, models *[]Model) (err error) {
 	Db.Where("url = ? AND token = ?", url, token).First(&e)
 
