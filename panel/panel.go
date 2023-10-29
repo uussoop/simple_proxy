@@ -1,7 +1,11 @@
 package panel
 
 import (
+	"context"
+	"net/http"
 	"os"
+	"os/signal"
+	"time"
 
 	"github.com/GoAdminGroup/go-admin/engine"
 	"github.com/GoAdminGroup/go-admin/modules/config"
@@ -10,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rodrikv/openai_proxy/panel/tables"
 	"github.com/rodrikv/openai_proxy/utils"
+	"github.com/sirupsen/logrus"
 )
 
 type Panel struct {
@@ -49,15 +54,34 @@ func (p *Panel) Init() {
 	}
 }
 
-func (p *Panel) Run(port string) {
+func (p *Panel) Run(ctx context.Context, port string) {
 	p.Init()
+
+	p.engine.HTML("GET", "/admin", DashboardPage)
 	p.ginEngine.Static("/uploads", "./upload")
 	p.ginEngine.Static("/static", "./assets")
 
-	p.ginEngine.Run(":" + port)
-}
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: p.ginEngine,
+	}
 
-func (p *Panel) Stop() {
+	go func() {
+		if err := srv.ListenAndServe(); err != nil {
+			logrus.Printf("listen: %s\n", err)
+		}
+	}()
+
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		logrus.Fatal("Server Shutdown:", err)
+	}
+	logrus.Println("Server exiting")
 
 }
 

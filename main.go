@@ -49,7 +49,7 @@ func main() {
 	}
 
 	p := panel.Panel{}
-	go p.Run(utils.Getenv("PANEL_PORT", "8081"))
+	go p.Run(ctx, utils.Getenv("PANEL_PORT", "8081"))
 
 	go func() {
 		<-sigCh
