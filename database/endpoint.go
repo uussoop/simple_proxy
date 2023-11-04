@@ -147,14 +147,14 @@ var requestLock sync.Mutex
 func (e *Endpoint) GetRequestInMin() (int, bool) {
 	c := cache.GetCache()
 	key := "endpoint:request_in_min:" + e.Name
+	requestLock.Lock()
+	defer requestLock.Unlock()
 
 	v, is := c.Get(key)
 
 	if is {
 		return v.(int), is
 	}
-	requestLock.Lock()
-	defer requestLock.Unlock()
 
 	Db.First(&e, e.ID)
 
@@ -186,14 +186,14 @@ func (e *Endpoint) ResetEndpointDailyUsage() {
 func (e *Endpoint) GetRequestInDay() (int, bool) {
 	c := cache.GetCache()
 	key := "endpoint:request_in_day:" + e.Name
+	requestLock.Lock()
+	defer requestLock.Unlock()
 
 	v, is := c.Get(key)
 
 	if is {
 		return v.(int), is
 	}
-	requestLock.Lock()
-	defer requestLock.Unlock()
 
 	Db.First(&e, e.ID)
 
