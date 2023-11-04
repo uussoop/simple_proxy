@@ -116,8 +116,13 @@ func (u *User) SetLastSeen(t time.Time) {
 }
 
 func (u *User) ResetRequestCount() {
+	key := "request_count:" + u.Name
+	c := cache.GetCache()
 	userRequestLock.Lock()
 	defer userRequestLock.Unlock()
+
+	c.Set(key, 0, time.Minute*1)
+
 	Db.Model(&u).Update("request_count", 0)
 }
 
