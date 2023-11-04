@@ -221,8 +221,7 @@ func ResetEndpointUsage() {
 		fmt.Println(result.Error)
 	}
 	for _, endpoint := range endpoints {
-		endpoint.RequestInMin = 0
-		endpoint.Update()
+		endpoint.ResetEndpointUsage()
 	}
 }
 
@@ -233,8 +232,7 @@ func ResetEndpointDailyUsage() {
 		fmt.Println(result.Error)
 	}
 	for _, endpoint := range endpoints {
-		endpoint.RequestInDay = 0
-		endpoint.Update()
+		endpoint.ResetEndpointDailyUsage()
 	}
 }
 

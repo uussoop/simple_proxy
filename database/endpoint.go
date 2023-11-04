@@ -158,7 +158,29 @@ func (e *Endpoint) GetRequestInMin() (int, bool) {
 
 	Db.First(&e, e.ID)
 
+	c.Set(key, e.RequestInDay, time.Minute)
+
 	return e.RequestInMin, is
+}
+
+func (e *Endpoint) ResetEndpointUsage() {
+	c := cache.GetCache()
+
+	key := "endpoint:request_in_min:" + e.Name
+
+	c.Set(key, 0, time.Minute)
+
+	go update_field(e, "request_in_min", 0)
+}
+
+func (e *Endpoint) ResetEndpointDailyUsage() {
+	c := cache.GetCache()
+
+	key := "endpoint:request_in_day:" + e.Name
+
+	c.Set(key, 0, time.Hour*24)
+
+	go update_field(e, "request_in_day", 0)
 }
 
 func (e *Endpoint) GetRequestInDay() (int, bool) {
@@ -174,6 +196,8 @@ func (e *Endpoint) GetRequestInDay() (int, bool) {
 	defer requestLock.Unlock()
 
 	Db.First(&e, e.ID)
+
+	c.Set(key, e.RequestInDay, time.Hour*24)
 
 	return e.RequestInDay, is
 }
