@@ -1,27 +1,21 @@
 package cache
 
 import (
+	"sync"
 	"time"
 
 	"github.com/patrickmn/go-cache"
 )
 
-// Cache is a wrapper for go-cache
-var c *Cache
+var keyLocks = make(map[string]*sync.Mutex)
+var keyLocksMutex sync.Mutex
 
+// Cache is a wrapper for go-cache
 type Cache struct {
 	*cache.Cache
 }
 
 func GetCache() *Cache {
-	if c == nil {
-		c = NewCache()
-	}
-	return c
-}
-
-// NewCache 	returns a new Cache
-func NewCache() *Cache {
 	return &Cache{
 		Cache: cache.New(5*time.Minute, 10*time.Minute),
 	}
@@ -29,22 +23,33 @@ func NewCache() *Cache {
 
 // Set sets a value in the cache
 func (c *Cache) Set(key string, value interface{}, expiration time.Duration) {
+	lock := GetLockForKey(key)
+	lock.Lock()
+	defer lock.Unlock()
+
 	c.Cache.Set(key, value, expiration)
 }
 
 // Get gets a value from the cache
 func (c *Cache) Get(key string) (interface{}, bool) {
+	lock := GetLockForKey(key)
+	lock.Lock()
+	defer lock.Unlock()
+
 	return c.Cache.Get(key)
 }
 
 // Delete deletes a value from the cache
 func (c *Cache) Delete(key string) {
+	lock := GetLockForKey(key)
+	lock.Lock()
+	defer lock.Unlock()
+
 	c.Cache.Delete(key)
 }
 
 // Clear clears the cache
 func (c *Cache) Clear() {
-
 	c.Cache.Flush()
 }
 
@@ -57,4 +62,17 @@ func (c *Cache) GetOrSet(key string, value interface{}, expiration time.Duration
 	c.Set(key, value, expiration)
 
 	return value
+}
+
+func GetLockForKey(key string) *sync.Mutex {
+	keyLocksMutex.Lock()
+	defer keyLocksMutex.Unlock()
+
+	if lock, ok := keyLocks[key]; ok {
+		return lock
+	}
+
+	lock := &sync.Mutex{}
+	keyLocks[key] = lock
+	return lock
 }

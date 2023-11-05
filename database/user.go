@@ -55,15 +55,11 @@ func (u *User) GetEndpoints() (endpoints []Endpoint, err error) {
 
 var userRequestLock sync.Mutex
 
-var userCacheRequestLock sync.Mutex
-
 func (u *User) Requested() {
 	key := "request_count:" + u.Name
 	c := cache.GetCache()
 
 	requestCount := u.GetRequestCount()
-	userCacheRequestLock.Lock()
-	defer userCacheRequestLock.Unlock()
 
 	c.Set(key, requestCount+1, time.Minute*1)
 	go func() {
@@ -78,9 +74,6 @@ func (u *User) RemoveRequested() {
 	c := cache.GetCache()
 
 	requestCount := u.GetRequestCount()
-
-	userCacheRequestLock.Lock()
-	defer userCacheRequestLock.Unlock()
 
 	if requestCount == 0 {
 		return
