@@ -56,14 +56,9 @@ func (u *User) GetEndpoints() (endpoints []Endpoint, err error) {
 
 var userRequestLock sync.Mutex
 
-var requestedUserLock sync.Mutex
-
-func (u *User) Requested() {
+func (u *User) Requested() int {
 	key := "request_count:" + u.Name
 	c := cache.GetCache()
-
-	requestedUserLock.Lock()
-	defer requestedUserLock.Unlock()
 
 	requestCount := u.GetRequestCount()
 
@@ -75,14 +70,13 @@ func (u *User) Requested() {
 		defer userRequestLock.Unlock()
 		Db.Model(&u).Update("request_count", requestCount+1)
 	}()
+
+	return requestCount + 1
 }
 
 func (u *User) RemoveRequested() {
 	key := "request_count:" + u.Name
 	c := cache.GetCache()
-
-	requestedUserLock.Lock()
-	defer requestedUserLock.Unlock()
 
 	requestCount := u.GetRequestCount()
 
