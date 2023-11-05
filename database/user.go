@@ -56,9 +56,14 @@ func (u *User) GetEndpoints() (endpoints []Endpoint, err error) {
 
 var userRequestLock sync.Mutex
 
+var requestedUserLock sync.Mutex
+
 func (u *User) Requested() {
 	key := "request_count:" + u.Name
 	c := cache.GetCache()
+
+	requestedUserLock.Lock()
+	defer requestedUserLock.Unlock()
 
 	requestCount := u.GetRequestCount()
 
@@ -75,6 +80,9 @@ func (u *User) Requested() {
 func (u *User) RemoveRequested() {
 	key := "request_count:" + u.Name
 	c := cache.GetCache()
+
+	requestedUserLock.Lock()
+	defer requestedUserLock.Unlock()
 
 	requestCount := u.GetRequestCount()
 
