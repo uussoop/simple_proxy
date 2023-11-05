@@ -6,12 +6,15 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"sync"
 
 	"github.com/rodrikv/openai_proxy/api"
 	"github.com/rodrikv/openai_proxy/database"
 	"github.com/rodrikv/openai_proxy/utils"
 	"github.com/sirupsen/logrus"
 )
+
+var checkServerLock sync.Mutex
 
 func SetOpenAIServer(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -75,9 +78,15 @@ func SetOpenAIServer(next http.Handler) http.Handler {
 			return
 		}
 
+		checkServerLock.Lock()
+
 		for _, en := range ens {
 			rim, _ := en.GetRequestInMin()
 			rid, _ := en.GetRequestInDay()
+
+			logrus.Info("endpoint <", en.Name, "> has ", rim, "request in min")
+			logrus.Info("endpoint <", en.Name, "> has ", rid, "request in day")
+
 			if en.GetConnection() < load && en.GetConnection() < en.Concurrent && en.Active() && rid < en.RPD && rim < en.RPM && en.HasModel(m) {
 				load = en.Connections
 				leastBusyEndpoint = en
@@ -85,11 +94,13 @@ func SetOpenAIServer(next http.Handler) http.Handler {
 		}
 
 		if leastBusyEndpoint.ID == 0 {
+			checkServerLock.Unlock()
 			api.ServerNotReady(w)
 			return
 		}
-
 		leastBusyEndpoint.AddConnection()
+
+		checkServerLock.Unlock()
 
 		c := context.WithValue(r.Context(), utils.EndpointKey, &leastBusyEndpoint)
 		c = context.WithValue(c, utils.ModelKey, &m)

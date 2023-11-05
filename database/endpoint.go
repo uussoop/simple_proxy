@@ -99,9 +99,6 @@ func (e *Endpoint) GetConnection() int {
 		return v.(int)
 	}
 
-	connLock.Lock()
-	defer connLock.Unlock()
-
 	Db.First(&e, e.ID)
 
 	c.Set(key, e.Connections, time.Minute*1)
@@ -115,11 +112,7 @@ func (e *Endpoint) AddConnection() (err error) {
 	conn := e.GetConnection()
 
 	c.Set(key, conn+1, time.Minute*1)
-	go func() {
-		connLock.Lock()
-		defer connLock.Unlock()
-		Db.Model(&e).Update("connections", conn+1)
-	}()
+	Db.Model(&e).Update("connections", conn+1)
 	return
 }
 
@@ -134,11 +127,7 @@ func (e *Endpoint) RemoveConnection() (err error) {
 	}
 
 	c.Set(key, conn-1, time.Minute*1)
-	go func() {
-		connLock.Lock()
-		defer connLock.Unlock()
-		Db.Model(&e).Update("connections", conn-1)
-	}()
+	Db.Model(&e).Update("connections", conn-1)
 	return
 }
 
@@ -147,8 +136,6 @@ var requestLock sync.Mutex
 func (e *Endpoint) GetRequestInMin() (int, bool) {
 	c := cache.GetCache()
 	key := "endpoint:request_in_min:" + e.Name
-	requestLock.Lock()
-	defer requestLock.Unlock()
 
 	v, is := c.Get(key)
 
@@ -161,6 +148,23 @@ func (e *Endpoint) GetRequestInMin() (int, bool) {
 	c.Set(key, e.RequestInDay, time.Minute)
 
 	return e.RequestInMin, is
+}
+
+func (e *Endpoint) GetRequestInDay() (int, bool) {
+	c := cache.GetCache()
+	key := "endpoint:request_in_day:" + e.Name
+
+	v, is := c.Get(key)
+
+	if is {
+		return v.(int), is
+	}
+
+	Db.First(&e, e.ID)
+
+	c.Set(key, e.RequestInDay, time.Hour*24)
+
+	return e.RequestInDay, is
 }
 
 func (e *Endpoint) ResetEndpointUsage() {
@@ -183,28 +187,7 @@ func (e *Endpoint) ResetEndpointDailyUsage() {
 	go update_field(e, "request_in_day", 0)
 }
 
-func (e *Endpoint) GetRequestInDay() (int, bool) {
-	c := cache.GetCache()
-	key := "endpoint:request_in_day:" + e.Name
-	requestLock.Lock()
-	defer requestLock.Unlock()
-
-	v, is := c.Get(key)
-
-	if is {
-		return v.(int), is
-	}
-
-	Db.First(&e, e.ID)
-
-	c.Set(key, e.RequestInDay, time.Hour*24)
-
-	return e.RequestInDay, is
-}
-
 func update_field(e *Endpoint, field string, v int) {
-	requestLock.Lock()
-	defer requestLock.Unlock()
 	Db.Model(&e).Update(field, v)
 }
 
@@ -217,14 +200,29 @@ func (e *Endpoint) Requested() {
 	v1, _ := e.GetRequestInMin()
 	logrus.Info("request in min count: ", v1)
 	c.Set(requestInMinKey, v1+1, time.Minute*1)
-
-	go update_field(e, "request_in_min", v1+1)
+	update_field(e, "request_in_min", v1+1)
 
 	v2, _ := e.GetRequestInDay()
 	logrus.Info("request in day count: ", v2)
 	c.Set(requestInDayKey, v2+1, time.Hour*24)
+	update_field(e, "request_in_day", v2+1)
+}
 
-	go update_field(e, "request_in_day", v2+1)
+func (e *Endpoint) RemoveRequest() {
+	c := cache.GetCache()
+
+	requestInMinKey := "endpoint:request_in_min:" + e.Name
+	requestInDayKey := "endpoint:request_in_day:" + e.Name
+
+	v1, _ := e.GetRequestInMin()
+	logrus.Info("request in min count: ", v1)
+	c.Set(requestInMinKey, v1-1, time.Minute*1)
+	update_field(e, "request_in_min", v1-1)
+
+	v2, _ := e.GetRequestInDay()
+	logrus.Info("request in day count: ", v2)
+	c.Set(requestInDayKey, v2-1, time.Hour*24)
+	update_field(e, "request_in_day", v2-1)
 }
 
 func (e *Endpoint) Update() (err error) {

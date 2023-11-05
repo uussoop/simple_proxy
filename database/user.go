@@ -3,6 +3,7 @@ package database
 import (
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/rodrikv/openai_proxy/pkg/cache"
@@ -56,41 +57,39 @@ func (u *User) GetEndpoints() (endpoints []Endpoint, err error) {
 
 var userRequestLock sync.Mutex
 
-func (u *User) Requested() int {
+func (u *User) Requested() int64 {
+	userRequestLock.Lock()
+	defer userRequestLock.Unlock()
 	key := "request_count:" + u.Name
 	c := cache.GetCache()
-
 	requestCount := u.GetRequestCount()
 
-	logrus.Info("requestCount: ", requestCount)
+	requestCount64 := int64(requestCount)
 
-	c.Set(key, requestCount+1, time.Minute*1)
-	go func() {
-		userRequestLock.Lock()
-		defer userRequestLock.Unlock()
-		Db.Model(&u).Update("request_count", requestCount+1)
-	}()
+	atomic.AddInt64(&requestCount64, 1)
 
-	return requestCount + 1
+	logrus.Info("requestCount: ", requestCount64)
+
+	c.Set(key, requestCount64, time.Minute*1)
+	Db.Model(&u).Update("request_count", requestCount64)
+	return requestCount64
 }
 
 func (u *User) RemoveRequested() {
+	userRequestLock.Lock()
+	defer userRequestLock.Unlock()
 	key := "request_count:" + u.Name
 	c := cache.GetCache()
-
 	requestCount := u.GetRequestCount()
 
+	requestCount64 := int64(requestCount)
 	if requestCount == 0 {
 		return
 	}
 
-	c.Set(key, requestCount-1, time.Minute*1)
-
-	go func() {
-		userRequestLock.Lock()
-		defer userRequestLock.Unlock()
-		Db.Model(&u).Update("request_count", requestCount-1)
-	}()
+	atomic.AddInt64(&requestCount64, -1)
+	c.Set(key, requestCount64, time.Minute*1)
+	Db.Model(&u).Update("request_count", requestCount64)
 }
 
 func (u *User) GetRequestCount() int {

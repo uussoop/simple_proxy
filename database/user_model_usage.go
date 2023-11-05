@@ -2,6 +2,7 @@ package database
 
 import (
 	"sync"
+	"sync/atomic"
 
 	"github.com/rodrikv/openai_proxy/pkg/cache"
 	"gorm.io/gorm"
@@ -51,24 +52,23 @@ func (mu *EndpointModelUsage) GetOrCreate(u User, e Endpoint, m Model) (created 
 var usageLock sync.Mutex
 
 func (mu *EndpointModelUsage) Increase(tokenCount uint) (err error) {
+	usageLock.Lock()
+	defer usageLock.Unlock()
 	c, ok := cache.GetCache().Get(mu.User.Name + mu.Endpoint.Name + mu.LLMModel.Name)
 
-	var usage uint
+	var usage uint64
 
 	if ok {
-		usage = c.(uint) + tokenCount
+		usage = uint64(c.(uint))
+		atomic.AddUint64(&usage, uint64(tokenCount))
 	} else {
 		Db.First(&mu, mu.ID)
-		usage = mu.TokenUsed
+		usage = uint64(mu.TokenUsed)
 	}
 
-	go func() {
-		usageLock.Lock()
-		defer usageLock.Unlock()
-		err = Db.Model(&mu).Update("token_used", usage).Error
-	}()
+	err = Db.Model(&mu).Update("token_used", uint(usage)).Error
 
-	cache.GetCache().Set(mu.User.Name+mu.Endpoint.Name+mu.LLMModel.Name, usage, 0)
+	cache.GetCache().Set(mu.User.Name+mu.Endpoint.Name+mu.LLMModel.Name, uint(usage), 0)
 
 	return
 }

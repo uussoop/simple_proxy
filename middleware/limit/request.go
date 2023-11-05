@@ -13,7 +13,7 @@ func LimitRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		u, _ := r.Context().Value(utils.UserKey).(*database.User)
 
-		if u.Requested() > u.RateLimit {
+		if u.Requested() > int64(u.RateLimit) {
 			logrus.Debug("user <", u.Name, "> is limited in sending requests")
 			api.RateLimitError(w)
 			return

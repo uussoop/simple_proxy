@@ -23,28 +23,16 @@ func GetCache() *Cache {
 
 // Set sets a value in the cache
 func (c *Cache) Set(key string, value interface{}, expiration time.Duration) {
-	lock := GetLockForKey(key)
-	lock.Lock()
-	defer lock.Unlock()
-
 	c.Cache.Set(key, value, expiration)
 }
 
 // Get gets a value from the cache
 func (c *Cache) Get(key string) (interface{}, bool) {
-	lock := GetLockForKey(key)
-	lock.Lock()
-	defer lock.Unlock()
-
 	return c.Cache.Get(key)
 }
 
 // Delete deletes a value from the cache
 func (c *Cache) Delete(key string) {
-	lock := GetLockForKey(key)
-	lock.Lock()
-	defer lock.Unlock()
-
 	c.Cache.Delete(key)
 }
 
