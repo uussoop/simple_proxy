@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/rodrikv/openai_proxy/pkg/cache"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -61,6 +62,8 @@ func (u *User) Requested() {
 
 	requestCount := u.GetRequestCount()
 
+	logrus.Info("requestCount: ", requestCount)
+
 	c.Set(key, requestCount+1, time.Minute*1)
 	go func() {
 		userRequestLock.Lock()
@@ -91,8 +94,6 @@ func (u *User) RemoveRequested() {
 func (u *User) GetRequestCount() int {
 	key := "request_count:" + u.Name
 	c := cache.GetCache()
-	userRequestLock.Lock()
-	defer userRequestLock.Unlock()
 	v, is := c.Get(key)
 
 	if is {
