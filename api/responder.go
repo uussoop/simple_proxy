@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/uussoop/simple_proxy/database"
+	"github.com/uussoop/simple_proxy/pkg/cache"
 	"github.com/uussoop/simple_proxy/utils"
 )
 
@@ -33,7 +34,16 @@ func updateUsageRequest(body *[]byte, user *database.User) {
 	}
 	fmt.Printf("request count %s \n", strconv.Itoa(requestStringCount))
 	// user.UsageToday = user.UsageToday + requestStringCount
-	database.UpdateUserUsageToday(*&user.ID, requestStringCount, false)
+	cach := cache.GetCache()
+	nowadder, ok := cach.Get(strconv.Itoa(int(user.ID)))
+	if !ok {
+		cach.Set(strconv.Itoa(int(user.ID)), requestStringCount, 0)
+	} else {
+
+		cach.Set(strconv.Itoa(int(user.ID)), ((nowadder.(int)) + requestStringCount), 0)
+
+	}
+	// database.UpdateUserUsageToday(*&user.ID, requestStringCount, false)
 
 }
 func updateUsage(resp *http.Response, resp_body *[]byte, user *database.User) {
@@ -64,8 +74,16 @@ func updateUsage(resp *http.Response, resp_body *[]byte, user *database.User) {
 		fmt.Printf("response count %s \n", strconv.Itoa(responseStringCount))
 
 		// user.UsageToday = user.UsageToday + responseStringCount
+		cach := cache.GetCache()
+		nowadder, ok := cach.Get(strconv.Itoa(int(user.ID)))
+		if !ok {
+			cach.Set(strconv.Itoa(int(user.ID)), responseStringCount, 0)
+		} else {
 
-		database.UpdateUserUsageToday(*&user.ID, responseStringCount, false)
+			cach.Set(strconv.Itoa(int(user.ID)), ((nowadder.(int)) + responseStringCount), 0)
+
+		}
+		// database.UpdateUserUsageToday(*&user.ID, responseStringCount, false)
 	}
 }
 

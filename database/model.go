@@ -3,7 +3,6 @@ package database
 import (
 	"fmt"
 	"strings"
-	"sync"
 
 	"gorm.io/gorm"
 )
@@ -60,11 +59,8 @@ func GetUserByToken(token string) ([]User, error) {
 	return users, nil
 }
 
-var mulock sync.Mutex
-
 func UpdateUserUsageToday(userid uint, addedUsage int, reset bool) error {
-	mulock.Lock()
-	defer mulock.Unlock()
+
 	var user User
 	result := Db.Where("id = ?", userid).Find(&user)
 	if reset {

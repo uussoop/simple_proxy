@@ -13,7 +13,9 @@ import (
 	"github.com/uussoop/simple_proxy/api"
 	"github.com/uussoop/simple_proxy/config"
 	"github.com/uussoop/simple_proxy/database"
+	mycron "github.com/uussoop/simple_proxy/pkg/cron"
 	"github.com/uussoop/simple_proxy/utils"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -34,10 +36,12 @@ func main() {
 	if migrationerr != nil {
 		panic("failed to migrate")
 	}
+	mycron.Start()
 	config.Init_users()
 	crn := cron.New()
 	crn.AddFunc("0 0 12 * * *", database.ResetUsageToday)
 	crn.Start()
+
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt)
 	mux := http.NewServeMux()
