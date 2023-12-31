@@ -37,10 +37,10 @@ func updateUsageRequest(body *[]byte, user *database.User) {
 	cach := cache.GetCache()
 	nowadder, ok := cach.Get(strconv.Itoa(int(user.ID)))
 	if !ok {
-		cach.Set(strconv.Itoa(int(user.ID)), requestStringCount, 0)
+		cach.Set(strconv.Itoa(int(user.ID)), requestStringCount+10, 0)
 	} else {
 
-		cach.Set(strconv.Itoa(int(user.ID)), ((nowadder.(int)) + requestStringCount), 0)
+		cach.Set(strconv.Itoa(int(user.ID)), ((nowadder.(int)) + requestStringCount + 10), 0)
 
 	}
 	// database.UpdateUserUsageToday(*&user.ID, requestStringCount, false)
@@ -77,10 +77,10 @@ func updateUsage(resp *http.Response, resp_body *[]byte, user *database.User) {
 		cach := cache.GetCache()
 		nowadder, ok := cach.Get(strconv.Itoa(int(user.ID)))
 		if !ok {
-			cach.Set(strconv.Itoa(int(user.ID)), responseStringCount, 0)
+			cach.Set(strconv.Itoa(int(user.ID)), responseStringCount+10, 0)
 		} else {
 
-			cach.Set(strconv.Itoa(int(user.ID)), ((nowadder.(int)) + responseStringCount), 0)
+			cach.Set(strconv.Itoa(int(user.ID)), ((nowadder.(int)) + responseStringCount + 10), 0)
 
 		}
 		// database.UpdateUserUsageToday(*&user.ID, responseStringCount, false)
