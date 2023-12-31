@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"path"
 	"strings"
+	"sync"
 
 	"github.com/uussoop/simple_proxy/database"
 	"github.com/uussoop/simple_proxy/utils"
@@ -21,9 +22,12 @@ type streamRequest struct {
 var api_key string = utils.Getenv("OPENAI_API_KEY", "")
 
 var domain string = utils.Getenv("OPENAI_DOMAIN", "api.openai.com")
+var mulock sync.Mutex
 
 func Forwarder(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
+	mulock.Lock()
+	defer mulock.Unlock()
 	authenticationToken := r.Header.Get("Authorization")
 	users, exists := database.Authenticate(&authenticationToken)
 	l := true
@@ -54,7 +58,11 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 		path := path.Clean(r.URL.Path)
 		// use differ
 
-		req, err := http.NewRequest(strings.ToUpper(r.Method), "https://"+domain+path, bytes.NewBuffer(bodyCopy))
+		req, err := http.NewRequest(
+			strings.ToUpper(r.Method),
+			"https://"+domain+path,
+			bytes.NewBuffer(bodyCopy),
+		)
 		for k, v := range r.Header {
 			if k == "Authorization" {
 				req.Header.Add(k, "Bearer "+api_key)
@@ -94,7 +102,11 @@ func NormalResponse(w http.ResponseWriter, r *http.Request, exists bool) {
 		fmt.Printf("error reading body: %s\n", readErr)
 	}
 	path := path.Clean(r.URL.Path)
-	req, err := http.NewRequest(strings.ToUpper(r.Method), "https://"+domain+path, bytes.NewBuffer(bodyCopy))
+	req, err := http.NewRequest(
+		strings.ToUpper(r.Method),
+		"https://"+domain+path,
+		bytes.NewBuffer(bodyCopy),
+	)
 	for k, v := range r.Header {
 
 		if k == "Authorization" {

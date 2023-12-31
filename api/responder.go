@@ -9,13 +9,10 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/uussoop/simple_proxy/database"
 	"github.com/uussoop/simple_proxy/utils"
 )
-
-var mulock sync.Mutex
 
 func updateUsageRequest(body *[]byte, user *database.User) {
 	isgzip := false
@@ -190,8 +187,7 @@ func NonStreamResponser(
 	resp *http.Response,
 	user *database.User,
 ) {
-	mulock.Lock()
-	defer mulock.Unlock()
+
 	updateUsageRequest(body, user)
 	resp_body, err := io.ReadAll(resp.Body)
 	updateUsage(resp, &resp_body, user)
@@ -217,8 +213,7 @@ func StreamResponser(
 	resp *http.Response,
 	user *database.User,
 ) {
-	mulock.Lock()
-	defer mulock.Unlock()
+
 	go updateUsageRequest(body, user)
 	reader := bufio.NewReader(resp.Body)
 	for {
