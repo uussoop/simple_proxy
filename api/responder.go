@@ -18,7 +18,6 @@ import (
 var mulock sync.Mutex
 
 func updateUsageRequest(body *[]byte, user *database.User) {
-
 	isgzip := false
 	isreq := true
 	requestString, requestStringerror := unmarshalOpenaiContent(body, isgzip, isreq)
@@ -74,7 +73,6 @@ func updateUsage(resp *http.Response, resp_body *[]byte, user *database.User) {
 }
 
 func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error) {
-
 	var responseBody interface{}
 	var deflatedBody []byte
 	if gzip {
@@ -129,7 +127,7 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 			fmt.Println(streamErr)
 		}
 		if req {
-			prompt, pok := responseBody.(map[string]interface{})["prompt"].(string)
+
 			message, ok := responseBody.(map[string]interface{})["messages"].([]interface{})
 			if ok {
 				if message[0].(map[string]interface{})["content"] != nil {
@@ -139,10 +137,6 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 					)
 
 				}
-			} else if pok {
-
-				contents = append(contents, prompt)
-
 			}
 
 		}
@@ -225,7 +219,6 @@ func StreamResponser(
 ) {
 	mulock.Lock()
 	defer mulock.Unlock()
-
 	go updateUsageRequest(body, user)
 	reader := bufio.NewReader(resp.Body)
 	for {
@@ -253,41 +246,10 @@ func StreamResponser(
 		if f, ok := w.(http.Flusher); ok {
 			f.Flush()
 		}
-
 	}
-	// read resp body chunk chunk until EOF and io write each chunk if available
-	// for { // read chunk
-	// 	// use bufio reader.ReadBytes('\n')
-
-	// 	buf := make([]byte, 200)
-	// 	n, err := resp.Body.Read(buf)
-	// 	buffer := buf[:n]
-	// 	updateUsage(resp, &buffer, user)
-	// 	if n == 0 {
-	// 		break
-	// 	}
-	// 	if err != nil && err != io.EOF {
-	// 		fmt.Printf("error reading response body: %s\n", err)
-	// 		break
-	// 	}
-	// 	for k, v := range resp.Header {
-
-	// 		w.Header().Add(k, v[0])
-	// 	}
-	// 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	// 	_, writeErr := w.Write(buf[:n])
-	// 	if writeErr != nil {
-	// 		fmt.Printf("error writing response body: %s\n", writeErr)
-	// 		break
-	// 	}
-	// 	if f, ok := w.(http.Flusher); ok {
-	// 		f.Flush()
-	// 	}
-	// }
 }
 
 func NormalStreamResponser(resp *http.Response, w http.ResponseWriter) {
-
 	resp_body, err := io.ReadAll(resp.Body)
 	// database.UpdateUser(database.User{Token: authenticationToken, UsageToday: users[0].UsageToday + requestStringCount + responseStringCount})
 	if err != nil {
