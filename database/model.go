@@ -59,6 +59,7 @@ func GetUserByToken(token string) ([]User, error) {
 	return users, nil
 }
 func UpdateUserUsageToday(user User) error {
+
 	result := Db.Model(&user).Update("usage_today", user.UsageToday)
 	if result.Error != nil {
 		return result.Error

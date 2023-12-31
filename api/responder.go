@@ -9,10 +9,13 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/uussoop/simple_proxy/database"
 	"github.com/uussoop/simple_proxy/utils"
 )
+
+var mulock sync.Mutex
 
 func updateUsageRequest(body *[]byte, user *database.User) {
 
@@ -130,7 +133,10 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 			message, ok := responseBody.(map[string]interface{})["messages"].([]interface{})
 			if ok {
 				if message[0].(map[string]interface{})["content"] != nil {
-					contents = append(contents, message[0].(map[string]interface{})["content"].(string))
+					contents = append(
+						contents,
+						message[0].(map[string]interface{})["content"].(string),
+					)
 
 				}
 			} else if pok {
@@ -145,7 +151,10 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 
 			if choices[0].(map[string]interface{})["delta"] != nil {
 				if choices[0].(map[string]interface{})["delta"].(map[string]interface{})["content"] != nil {
-					contents = append(contents, choices[0].(map[string]interface{})["delta"].(map[string]interface{})["content"].(string))
+					contents = append(
+						contents,
+						choices[0].(map[string]interface{})["delta"].(map[string]interface{})["content"].(string),
+					)
 
 				}
 
@@ -153,14 +162,20 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 			if choices[0].(map[string]interface{})["message"] != nil {
 
 				if choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"] != nil {
-					contents = append(contents, choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string))
+					contents = append(
+						contents,
+						choices[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string),
+					)
 
 				}
 			}
 			if choices[0].(map[string]interface{})["text"] != nil {
 
 				if choices[0].(map[string]interface{})["text"].(map[string]interface{})["content"] != nil {
-					contents = append(contents, choices[0].(map[string]interface{})["text"].(string))
+					contents = append(
+						contents,
+						choices[0].(map[string]interface{})["text"].(string),
+					)
 
 				}
 			}
@@ -175,7 +190,14 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 	}
 }
 
-func NonStreamResponser(body *[]byte, w http.ResponseWriter, resp *http.Response, user *database.User) {
+func NonStreamResponser(
+	body *[]byte,
+	w http.ResponseWriter,
+	resp *http.Response,
+	user *database.User,
+) {
+	mulock.Lock()
+	defer mulock.Unlock()
 	updateUsageRequest(body, user)
 	resp_body, err := io.ReadAll(resp.Body)
 	updateUsage(resp, &resp_body, user)
@@ -194,7 +216,15 @@ func NonStreamResponser(body *[]byte, w http.ResponseWriter, resp *http.Response
 
 	io.WriteString(w, string(resp_body))
 }
-func StreamResponser(body *[]byte, w http.ResponseWriter, resp *http.Response, user *database.User) {
+
+func StreamResponser(
+	body *[]byte,
+	w http.ResponseWriter,
+	resp *http.Response,
+	user *database.User,
+) {
+	mulock.Lock()
+	defer mulock.Unlock()
 
 	go updateUsageRequest(body, user)
 	reader := bufio.NewReader(resp.Body)
