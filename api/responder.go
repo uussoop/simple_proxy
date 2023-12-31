@@ -32,8 +32,8 @@ func updateUsageRequest(body *[]byte, user *database.User) {
 		}
 	}
 	fmt.Printf("request count %s \n", strconv.Itoa(requestStringCount))
-	user.UsageToday = user.UsageToday + requestStringCount
-	database.UpdateUserUsageToday(*user)
+	// user.UsageToday = user.UsageToday + requestStringCount
+	database.UpdateUserUsageToday(*&user.ID, requestStringCount, false)
 
 }
 func updateUsage(resp *http.Response, resp_body *[]byte, user *database.User) {
@@ -63,9 +63,9 @@ func updateUsage(resp *http.Response, resp_body *[]byte, user *database.User) {
 		}
 		fmt.Printf("response count %s \n", strconv.Itoa(responseStringCount))
 
-		user.UsageToday = user.UsageToday + responseStringCount
+		// user.UsageToday = user.UsageToday + responseStringCount
 
-		database.UpdateUserUsageToday(*user)
+		database.UpdateUserUsageToday(*&user.ID, responseStringCount, false)
 	}
 }
 

@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"gorm.io/gorm"
 )
@@ -58,9 +59,21 @@ func GetUserByToken(token string) ([]User, error) {
 
 	return users, nil
 }
-func UpdateUserUsageToday(user User) error {
 
-	result := Db.Model(&user).Update("usage_today", user.UsageToday)
+var mulock sync.Mutex
+
+func UpdateUserUsageToday(userid uint, addedUsage int, reset bool) error {
+	mulock.Lock()
+	defer mulock.Unlock()
+	var user User
+	result := Db.Where("id = ?", userid).Find(&user)
+	if reset {
+		user.UsageToday = 0
+	} else {
+		user.UsageToday += addedUsage
+	}
+
+	result = Db.Model(&user).Update("usage_today", user.UsageToday)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -108,7 +121,7 @@ func ResetUsageToday() {
 	}
 	for _, user := range users {
 		user.UsageToday = 0
-		UpdateUserUsageToday(user)
+		UpdateUserUsageToday(user.ID, 0, true)
 	}
 
 }
