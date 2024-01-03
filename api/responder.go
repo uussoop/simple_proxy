@@ -204,12 +204,18 @@ func NonStreamResponser(
 	w http.ResponseWriter,
 	resp *http.Response,
 	user *database.User,
+	isvision bool,
 ) {
 
-	updateUsageRequest(body, user)
+	if !isvision {
+
+		updateUsageRequest(body, user)
+	}
 	resp_body, err := io.ReadAll(resp.Body)
 	fmt.Println(string(resp_body))
+
 	updateUsage(resp, &resp_body, user)
+
 	// database.UpdateUser(database.User{Token: authenticationToken, UsageToday: users[0].UsageToday + requestStringCount + responseStringCount})
 	if err != nil {
 		fmt.Printf("error reading response body: %s\n", err)
