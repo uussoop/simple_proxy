@@ -208,6 +208,7 @@ func NonStreamResponser(
 
 	updateUsageRequest(body, user)
 	resp_body, err := io.ReadAll(resp.Body)
+	fmt.Println(string(resp_body))
 	updateUsage(resp, &resp_body, user)
 	// database.UpdateUser(database.User{Token: authenticationToken, UsageToday: users[0].UsageToday + requestStringCount + responseStringCount})
 	if err != nil {
