@@ -8,11 +8,12 @@ import (
 )
 
 type User struct {
-	ID         uint   `gorm:"primaryKey"`
-	Name       string `gorm:"unique"`
-	Token      string
-	Limited    bool
-	UsageToday int
+	ID           uint   `gorm:"primaryKey"`
+	Name         string `gorm:"unique"`
+	Token        string
+	Limited      bool
+	UsageToday   int
+	SpecialUsage int `gorm:"default:40000"`
 }
 
 var Db *gorm.DB
@@ -100,7 +101,7 @@ func IsLimited(user *User) bool {
 	if user.Limited {
 		return true
 	} else {
-		if user.UsageToday < 40000 {
+		if user.UsageToday < user.SpecialUsage {
 			return false
 		} else {
 			user.Limited = true
