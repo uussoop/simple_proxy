@@ -14,7 +14,8 @@ import (
 )
 
 type streamRequest struct {
-	Stream bool `json:"stream"`
+	Stream bool   `json:"stream"`
+	Model  string `json:"model"`
 	// Add other fields of the request body if applicable
 }
 
@@ -76,13 +77,14 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// resp_body := utils.Deflate_gzip(resp)
-
+		isvision := false
+		isvision = strings.Contains(streamBody.Model, "vision")
 		if streamBody.Stream {
 			StreamResponser(&bodyCopy, w, resp, &users[0])
 
 		} else {
 
-			NonStreamResponser(&bodyCopy, w, resp, &users[0])
+			NonStreamResponser(&bodyCopy, w, resp, &users[0], isvision)
 		}
 	} else {
 		if r.Method == "POST" {
