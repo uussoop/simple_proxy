@@ -2,8 +2,10 @@ package database
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
+	"github.com/uussoop/simple_proxy/pkg/cache"
 	"gorm.io/gorm"
 )
 
@@ -97,10 +99,13 @@ func Authenticate(a *string) ([]User, bool) {
 }
 
 func IsLimited(user *User) bool {
-
+	used, ok := cache.GetCache().Get(strconv.Itoa(int(user.ID)))
 	if user.Limited {
 		return true
 	} else {
+		if ok {
+			user.UsageToday = used.(int)
+		}
 		if user.UsageToday < user.SpecialUsage {
 			return false
 		} else {
