@@ -128,5 +128,9 @@ func NormalResponse(w http.ResponseWriter, r *http.Request, exists bool) {
 		fmt.Printf("error making request: %s\n", err)
 	}
 	fmt.Println("different kind of request")
+	if resp == nil {
+		w.Write([]byte(err.Error()))
+		return
+	}
 	NormalStreamResponser(resp, w)
 }
