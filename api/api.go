@@ -34,7 +34,7 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 	}
 	// fmt.Printf("%s", users)
 	fmt.Println(exists, l)
-	if exists && !l {
+	if exists && l {
 		var streamBody streamRequest
 		bodyCopy, readErr := io.ReadAll(r.Body) // Create a copy of the request body
 		// r.Body = io.NopCloser(bytes.NewBuffer(bodyCopy)) // Restore the request body with the copy
