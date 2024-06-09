@@ -20,8 +20,8 @@ func initJobs() {
 
 		// 0 0 0 ? * * * everyday
 		// 0 0/1 * * * ? every minute
-		CronJob.AddFunc("* * * ? * * *", jobs.SaveUsage)
-		CronJob.AddFunc("0 0 0 ? * * *", database.ResetUsageToday)
+		CronJob.AddFunc("* * * * * *", jobs.SaveUsage)
+		CronJob.AddFunc("0 0 0 * * *", database.ResetUsageToday)
 
 	}
 }
