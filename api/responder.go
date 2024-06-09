@@ -32,7 +32,7 @@ func updateUsageRequest(body *[]byte, user *database.User) {
 			fmt.Println(newReqscErr)
 		}
 	}
-	fmt.Printf("request count %s \n", strconv.Itoa(requestStringCount))
+	// fmt.Printf("request count %s \n", strconv.Itoa(requestStringCount))
 	// user.UsageToday = user.UsageToday + requestStringCount
 	cach := cache.GetCache()
 	nowadder, ok := cach.Get(strconv.Itoa(int(user.ID)))
@@ -71,7 +71,7 @@ func updateUsage(resp *http.Response, resp_body *[]byte, user *database.User) {
 			}
 
 		}
-		fmt.Printf("response count %s \n", strconv.Itoa(responseStringCount))
+		// fmt.Printf("response count %s \n", strconv.Itoa(responseStringCount))
 
 		// user.UsageToday = user.UsageToday + responseStringCount
 		cach := cache.GetCache()
@@ -126,7 +126,7 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 	}
 	var contents []string
 	for _, bytes := range splited {
-		fmt.Printf("hiiiiiiiiiiiiiiii %s \n", string(bytes))
+		// fmt.Printf("hiiiiiiiiiiiiiiii %s \n", string(bytes))
 
 		streamErr := json.Unmarshal(bytes, &responseBody)
 		if streamErr != nil {

@@ -100,19 +100,19 @@ func Authenticate(a *string) ([]User, bool) {
 
 func IsLimited(user *User) bool {
 	used, ok := cache.GetCache().Get(strconv.Itoa(int(user.ID)))
-	if user.Limited {
-		return true
+
+	if ok {
+		user.UsageToday = used.(int)
 	} else {
-		if ok {
-			user.UsageToday = used.(int)
-		}
-		if user.UsageToday < user.SpecialUsage {
-			return false
-		} else {
-			user.Limited = true
-			return true
-		}
+		cache.GetCache().Set(strconv.Itoa(int(user.ID)), user.UsageToday, 0)
 	}
+	if user.UsageToday < user.SpecialUsage {
+		return false
+	} else {
+		user.Limited = true
+		return true
+	}
+
 }
 
 func ResetUsageToday() {
