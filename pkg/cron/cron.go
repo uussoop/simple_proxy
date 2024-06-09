@@ -1,7 +1,7 @@
 package cron
 
 import (
-	"github.com/robfig/cron"
+	"github.com/robfig/cron/v3"
 	"github.com/uussoop/simple_proxy/database"
 	"github.com/uussoop/simple_proxy/pkg/cron/jobs"
 )
@@ -9,7 +9,8 @@ import (
 var CronJob *cron.Cron
 
 func init() {
-	CronJob = cron.New()
+
+	CronJob = cron.New(cron.WithSeconds())
 
 	initJobs()
 }
