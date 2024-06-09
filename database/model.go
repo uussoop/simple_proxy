@@ -106,7 +106,7 @@ func IsLimited(user *User) bool {
 	} else {
 		cache.GetCache().Set(strconv.Itoa(int(user.ID)), user.UsageToday, 0)
 	}
-	if user.UsageToday < user.SpecialUsage {
+	if user.UsageToday <= user.SpecialUsage {
 		return false
 	} else {
 		user.Limited = true
@@ -116,6 +116,8 @@ func IsLimited(user *User) bool {
 }
 
 func ResetUsageToday() {
+	c := cache.GetCache()
+
 	var users []User
 	result := Db.Find(&users)
 	if result.Error != nil {
@@ -124,6 +126,7 @@ func ResetUsageToday() {
 	for _, user := range users {
 		user.UsageToday = 0
 		UpdateUserUsageToday(user.ID, 0, true)
+		c.Set(strconv.Itoa(int(user.ID)), 0, 0)
 	}
 
 }

@@ -2,6 +2,7 @@ package cron
 
 import (
 	"github.com/robfig/cron"
+	"github.com/uussoop/simple_proxy/database"
 	"github.com/uussoop/simple_proxy/pkg/cron/jobs"
 )
 
@@ -16,7 +17,10 @@ func init() {
 func initJobs() {
 	if CronJob != nil {
 
-		CronJob.AddFunc("*/60 * * * *", jobs.SaveUsage)
+		// 0 0 0 ? * * * everyday
+		// 0 0/1 * * * ? every minute
+		CronJob.AddFunc("* * * ? * * *", jobs.SaveUsage)
+		CronJob.AddFunc("0 0 0 ? * * *", database.ResetUsageToday)
 
 	}
 }

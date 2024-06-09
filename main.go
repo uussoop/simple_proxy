@@ -8,11 +8,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 
-	"github.com/robfig/cron"
 	"github.com/uussoop/simple_proxy/api"
 	"github.com/uussoop/simple_proxy/config"
 	"github.com/uussoop/simple_proxy/database"
+	"github.com/uussoop/simple_proxy/pkg/cache"
 	mycron "github.com/uussoop/simple_proxy/pkg/cron"
 	"github.com/uussoop/simple_proxy/utils"
 
@@ -38,9 +39,17 @@ func main() {
 	}
 	mycron.Start()
 	config.Init_users()
-	crn := cron.New()
-	crn.AddFunc("0 0 12 * * *", database.ResetUsageToday)
-	crn.Start()
+
+	c := cache.GetCache()
+	allusr, err := database.GetAllUsers()
+	if err != nil {
+		return
+	}
+	for _, u := range allusr {
+		c.Set(strconv.Itoa(int(u.ID))+"cachedusage", u.UsageToday, 0)
+		c.Set(strconv.Itoa(int(u.ID)), u.UsageToday, 0)
+
+	}
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt)
@@ -64,7 +73,7 @@ func main() {
 		server.Shutdown(ctx)
 		cancel() // Cancel the context when SIGINT is received
 	}()
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if errors.Is(err, http.ErrServerClosed) {
 		fmt.Printf("server closed\n")
 		return
