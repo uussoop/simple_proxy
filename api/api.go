@@ -88,7 +88,14 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		if r.Method == "POST" {
-			io.WriteString(w, `{"error":" you are limited for today"}`)
+			io.WriteString(w, `{
+				"error": {
+				  "message": "Quota exceeded for the requested resource. this is not openai this is beastbrain",
+				  "type": "insufficient_quota",
+				  "param": null,
+				  "code": "quota_exceeded"
+				}
+			  }`)
 			return
 		} else {
 			NormalResponse(w, r, exists)

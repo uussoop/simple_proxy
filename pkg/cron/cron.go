@@ -15,7 +15,7 @@ func init() {
 
 func initJobs() {
 	if CronJob != nil {
-		// every 5 minutes get models
+
 		CronJob.AddFunc("*/60 * * * *", jobs.SaveUsage)
 
 	}
