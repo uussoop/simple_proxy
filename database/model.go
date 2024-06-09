@@ -69,7 +69,7 @@ func UpdateUserUsageToday(userid uint, addedUsage int, reset bool) error {
 	if reset {
 		user.UsageToday = 0
 	} else {
-		user.UsageToday += addedUsage
+		user.UsageToday = addedUsage
 	}
 
 	result = Db.Model(&user).Update("usage_today", user.UsageToday)
