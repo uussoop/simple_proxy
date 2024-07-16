@@ -146,10 +146,14 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 			message, ok := responseBody.(map[string]interface{})["messages"].([]interface{})
 			if ok {
 				if message[0].(map[string]interface{})["content"] != nil {
-					contents = append(
-						contents,
-						message[0].(map[string]interface{})["content"].(string),
-					)
+					mes, ok := message[0].(map[string]interface{})["content"].(string)
+					if ok {
+						contents = append(
+							contents,
+							mes,
+						)
+
+					}
 
 				}
 			}
