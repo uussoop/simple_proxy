@@ -172,7 +172,7 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 									}
 									if tp.(string) == "image_url" {
 
-										contents = append(contents, "domestrin")
+										contents = append(contents, utils.ImageTokenString)
 
 									}
 								}
