@@ -183,6 +183,13 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 					}
 				}
 			}
+			emb, ok := responseBody.(map[string]interface{})["input"].(string)
+			if ok {
+				contents = append(
+					contents,
+					emb,
+				)
+			}
 
 		}
 		if responseBody.(map[string]interface{})["choices"] != nil {
