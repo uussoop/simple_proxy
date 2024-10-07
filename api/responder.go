@@ -156,14 +156,15 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 							)
 							continue
 						}
-						c, ok := message.([]map[string]interface{})
+						c, ok := message.(map[string]interface{})["content"].([]interface{})
+
 						if ok {
 
 							for _, content := range c {
 
-								if tp, ok := content["type"]; ok {
+								if tp, ok := content.(map[string]interface{})["type"]; ok {
 									if tp.(string) == "text" {
-										text, ok := content["text"].(string)
+										text, ok := content.(map[string]interface{})["text"].(string)
 										if ok {
 
 											contents = append(contents, text)
@@ -171,7 +172,7 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 									}
 									if tp.(string) == "image_url" {
 
-										contents = append(contents, utils.ImageTokenString)
+										contents = append(contents, "domestrin")
 
 									}
 								}
