@@ -233,15 +233,12 @@ func NonStreamResponser(
 	w http.ResponseWriter,
 	resp *http.Response,
 	user *database.User,
-	isvision bool,
+
 ) {
 
-	if !isvision {
+	updateUsageRequest(body, user)
 
-		updateUsageRequest(body, user)
-	}
 	resp_body, err := io.ReadAll(resp.Body)
-	fmt.Println(string(resp_body))
 
 	updateUsage(resp, &resp_body, user)
 

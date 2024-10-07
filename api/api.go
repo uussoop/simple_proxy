@@ -77,14 +77,13 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// resp_body := utils.Deflate_gzip(resp)
-		isvision := false
-		isvision = strings.Contains(streamBody.Model, "vision")
+
 		if streamBody.Stream {
 			StreamResponser(&bodyCopy, w, resp, &users[0])
 
 		} else {
 
-			NonStreamResponser(&bodyCopy, w, resp, &users[0], isvision)
+			NonStreamResponser(&bodyCopy, w, resp, &users[0])
 		}
 	} else {
 		if r.Method == "POST" {
