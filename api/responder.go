@@ -143,18 +143,43 @@ func unmarshalOpenaiContent(body *[]byte, gzip bool, req bool) ([]string, error)
 		}
 		if req {
 
-			message, ok := responseBody.(map[string]interface{})["messages"].([]interface{})
+			messages, ok := responseBody.(map[string]interface{})["messages"].([]interface{})
 			if ok {
-				if message[0].(map[string]interface{})["content"] != nil {
-					mes, ok := message[0].(map[string]interface{})["content"].(string)
-					if ok {
-						contents = append(
-							contents,
-							mes,
-						)
+				for _, message := range messages {
+
+					if message.(map[string]interface{})["content"] != nil {
+						mes, ok := message.(map[string]interface{})["content"].(string)
+						if ok {
+							contents = append(
+								contents,
+								mes,
+							)
+							continue
+						}
+						c, ok := message.([]map[string]interface{})
+						if ok {
+
+							for _, content := range c {
+
+								if tp, ok := content["type"]; ok {
+									if tp.(string) == "text" {
+										text, ok := content["text"].(string)
+										if ok {
+
+											contents = append(contents, text)
+										}
+									}
+									if tp.(string) == "image_url" {
+
+										contents = append(contents, utils.ImageTokenString)
+
+									}
+								}
+
+							}
+						}
 
 					}
-
 				}
 			}
 
