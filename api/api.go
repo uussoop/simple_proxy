@@ -34,13 +34,12 @@ func Forwarder(w http.ResponseWriter, r *http.Request) {
 		islimited = database.IsLimited(&users[0])
 	}
 	// fmt.Printf("%s", users)
-	fmt.Println(exists, islimited)
 	if exists && !islimited {
 		// print all headers
-		for k, v := range r.Header {
-			fmt.Println(k, v)
-		}
-		if r.Header.Get("Content-Type") == "multipart/form-data" {
+		// for k, v := range r.Header {
+		// 	fmt.Println(k, v)
+		// }
+		if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
 			handleMultipartRequest(w, r)
 		} else {
 
