@@ -166,12 +166,16 @@ func handleMultipartRequest(w http.ResponseWriter, r *http.Request) {
 	// Add form fields
 	for key, values := range r.MultipartForm.Value {
 		for _, value := range values {
-			writer.WriteField(key, value)
+			err := writer.WriteField(key, value)
+			if err != nil {
+				http.Error(w, "Error writing form field", http.StatusInternalServerError)
+				return
+			}
 		}
 	}
 
 	// Add files
-	for _, fileHeaders := range r.MultipartForm.File {
+	for key, fileHeaders := range r.MultipartForm.File {
 		for _, fileHeader := range fileHeaders {
 			file, err := fileHeader.Open()
 			if err != nil {
@@ -180,7 +184,7 @@ func handleMultipartRequest(w http.ResponseWriter, r *http.Request) {
 			}
 			defer file.Close()
 
-			part, err := writer.CreateFormFile(fileHeader.Filename, fileHeader.Filename)
+			part, err := writer.CreateFormFile(key, fileHeader.Filename)
 			if err != nil {
 				http.Error(w, "Error creating form file", http.StatusInternalServerError)
 				return
@@ -193,7 +197,7 @@ func handleMultipartRequest(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Close the multipart writer
+	// Close the multipart writer to finalize the body
 	writer.Close()
 
 	// Create a new request to the target server
@@ -213,7 +217,7 @@ func handleMultipartRequest(w http.ResponseWriter, r *http.Request) {
 	req.Header.Set("Authorization", "Bearer "+api_key)
 
 	// Send the request
-	client := &http.Client{Timeout: 0}
+	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		http.Error(w, "Error sending request", http.StatusInternalServerError)
